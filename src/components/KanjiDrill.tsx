@@ -75,7 +75,7 @@ const KanjiDrill = () => {
                 )}
             </div>
 
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-12">
                 {rows.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex justify-end">
                         <div className="flex flex-row-reverse items-start">
