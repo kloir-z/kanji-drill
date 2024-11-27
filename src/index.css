@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: "BIZ UDMincho", serif;
+}
+
 .writing-vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -27,13 +31,15 @@
   border: 1px solid #666;
   margin: 0px;
   margin-top: -1px;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 既存のCSSはそのまま残します */
 .writing-vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  font-family: "BIZ UDMincho", serif;
 }
 
 .ruby-container {
