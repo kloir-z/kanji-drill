@@ -8,12 +8,10 @@ const KanjiDrill = () => {
 
     const updateQuestionsPerRow = () => {
         const width = window.innerWidth;
-        // 120px（設問の最小幅）をベースに計算
-        // paddingの8px × 2も考慮
-        const availableWidth = width - 16;
-        const maxQuestions = Math.floor(availableWidth / 120);
-
-        // 2問から20問の間で設定
+        // マージンの分も考慮して計算
+        const questionWidth = 120 + 32; // 最小幅 120px + マージン左右合計 32px
+        const availableWidth = width - 32; // padding 16px × 2
+        const maxQuestions = Math.floor(availableWidth / questionWidth);
         setQuestionsPerRow(Math.max(2, Math.min(20, maxQuestions)));
     };
 

@@ -8,7 +8,7 @@ export const QuestionDisplay = ({ question }: { question: Question }) => {
     const isKanjiOnly = kanjiOnly.test(question.kanji);
 
     return (
-        <div className="min-w-[120px] flex justify-center">
+        <div className="min-w-[120px] mx-4 flex justify-center">
             <div className="writing-vertical inline-flex flex-col items-center text-2xl whitespace-nowrap">
                 <div className="flex items-center">
                     {parts.map((part, partIndex, array) => (
