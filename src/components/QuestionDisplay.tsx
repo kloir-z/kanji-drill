@@ -15,7 +15,7 @@ export const QuestionDisplay = ({ question }: { question: Question }) => {
 
     return (
         <div
-            className="min-w-[120px] mx-4 flex justify-center cursor-pointer font-mincho"
+            className="min-w-[120px] mx-4 flex justify-center"
             onClick={toggleAnswer}
         >
             <div className="writing-vertical inline-flex flex-col items-center text-2xl whitespace-nowrap">
@@ -26,28 +26,24 @@ export const QuestionDisplay = ({ question }: { question: Question }) => {
                             {partIndex < array.length - 1 && (
                                 <div className="relative inline-block">
                                     <span className="inline-block relative">
-                                        {isKanjiOnly ? (
-                                            <span className="text-4xl mx-auto flex">
-                                                {Array.from(question.kanji).map((char, idx) => (
+                                        <span className={`text-4xl mx-auto flex ${!isKanjiOnly ? 'border border-gray-600 px-5 py-9 min-h-[144px] items-center mt-2' : ''}`}>
+                                            {isKanjiOnly ? (
+                                                Array.from(question.kanji).map((char, idx) => (
                                                     <span key={idx} className="kanji-box flex items-center justify-center">
-                                                        {isAnswerShown && (
+                                                        {isAnswerShown ? (
                                                             <span className="text-red-600">{char}</span>
+                                                        ) : (
+                                                            // eslint-disable-next-line no-irregular-whitespace
+                                                            <span>　</span>
                                                         )}
                                                     </span>
-                                                ))}
-                                            </span>
-                                        ) : (
-                                            <span className="text-4xl mx-auto flex border border-gray-600 px-5 py-9 min-h-[144px] flex items-center mt-2">
-                                                {isAnswerShown ? (
-                                                    <span className="text-red-600 writing-vertical tracking-[0.22em]">{question.kanji}</span>
-                                                ) : (
-                                                    Array.from(question.kanji).map((_, idx) => (
-                                                        // eslint-disable-next-line no-irregular-whitespace
-                                                        <span key={idx} className="writing-vertical mb-2">　</span>
-                                                    ))
-                                                )}
-                                            </span>
-                                        )}
+                                                ))
+                                            ) : (
+                                                <span className={`writing-vertical tracking-[0.22em] ${isAnswerShown ? 'text-red-600' : ''}`}>
+                                                    {isAnswerShown ? question.kanji : Array(question.kanji.length).fill('　').join('')}
+                                                </span>
+                                            )}
+                                        </span>
                                         <span className="absolute top-0 -right-7 text-sm ruby-text">
                                             {readingText}
                                         </span>

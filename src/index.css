@@ -59,3 +59,8 @@ body {
 .kanji-box:first-child {
   margin-top: 6px;
 }
+
+.kanji-box, .writing-vertical {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
