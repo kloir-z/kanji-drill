@@ -1,10 +1,19 @@
 import { ChangeEvent, useState, useEffect } from 'react';
 import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
+import { StoredCSVFile } from '../types';
 
 const KanjiDrill = () => {
-    const { questions, errors, processCSV } = useCSVProcessor();
+    const {
+        questions,
+        errors,
+        storedFiles,
+        processCSV,
+        loadStoredFile,
+        removeStoredFile
+    } = useCSVProcessor();
     const [questionsPerRow, setQuestionsPerRow] = useState(5);
+    const [selectedFileId, setSelectedFileId] = useState<string>('');
 
     const updateQuestionsPerRow = () => {
         const width = window.innerWidth;
@@ -51,15 +60,57 @@ const KanjiDrill = () => {
         }
     };
 
+    const handleStoredFileSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+        const id = event.target.value;
+        if (id) {
+            setSelectedFileId(id);
+            loadStoredFile(id);
+        }
+    };
+
+    const handleFileRemove = (id: string) => {
+        removeStoredFile(id);
+        if (selectedFileId === id) {
+            setSelectedFileId('');
+        }
+    };
+
     return (
         <div className="p-4">
             <div className="mb-4">
-                <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileChange}
-                    className="block w-full text-sm text-gray-500 mb-4"
-                />
+                <div className="flex gap-4 items-center mb-4">
+                    <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileChange}
+                        className="block text-sm text-gray-500"
+                    />
+                    {storedFiles.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={selectedFileId}
+                                onChange={handleStoredFileSelect}
+                                className="block w-64 p-2 border border-gray-300 rounded"
+                            >
+                                <option value="">保存されたファイルを選択...</option>
+                                {storedFiles.map((file: StoredCSVFile) => (
+                                    <option key={file.id} value={file.id}>
+                                        {file.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {selectedFileId && (
+                                <button
+                                    onClick={() => handleFileRemove(selectedFileId)}
+                                    className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
+                                >
+                                    削除
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 {errors.length > 0 && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                         <ul className="list-none">
