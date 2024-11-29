@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Papa, { ParseResult } from 'papaparse';
 import { Question, ParseError } from '../types';
 import { detectEncoding } from '../utils/encoding';
-import { validateKanji } from '../utils/kanjiValidation';
 
 export const useCSVProcessor = () => {
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -31,10 +30,6 @@ export const useCSVProcessor = () => {
 
                             if (!row.text || !row.kanji || !row.reading) {
                                 throw new Error(`必要なフィールドが不足しています (text: ${row.text}, kanji: ${row.kanji}, reading: ${row.reading})`);
-                            }
-
-                            if (!validateKanji(row.kanji)) {
-                                throw new Error('漢字部分に想定外の文字が含まれています');
                             }
 
                             newQuestions.push({
