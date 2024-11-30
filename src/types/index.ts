@@ -1,6 +1,6 @@
 export interface Question {
     text: string;
-    kanji: string;
+    question: string;
     reading: string;
 }
 

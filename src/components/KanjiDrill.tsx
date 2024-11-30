@@ -96,15 +96,17 @@ const KanjiDrill = () => {
     };
 
     const handleFileRemove = (id: string) => {
-        removeStoredFile(id);
-        if (selectedFileId === id) {
-            setSelectedFileId('');
+        if (window.confirm('本当にこのファイルを削除しますか？')) {
+            removeStoredFile(id);
+            if (selectedFileId === id) {
+                setSelectedFileId('');
+            }
         }
     };
 
     return (
         <div className="p-4">
-            <div className="mb-4">
+            <div className="mb-2">
                 <div
                     className="w-full max-w-2xl border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-gray-400 transition-colors duration-200"
                     onDragOver={handleDragOver}
@@ -169,7 +171,7 @@ const KanjiDrill = () => {
                 </div>
             )}
 
-            <div className="mt-4 flex gap-4">
+            <div className="mt-2 mb-2 flex gap-4">
                 <button
                     onClick={() => setShowDifficultOnly(!showDifficultOnly)}
                     className={`px-4 py-2 rounded ${showDifficultOnly

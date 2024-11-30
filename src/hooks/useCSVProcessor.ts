@@ -24,13 +24,13 @@ export const useCSVProcessor = () => {
 
                 results.data.forEach((row, index) => {
                     try {
-                        if (!row.text || !row.kanji || !row.reading) {
-                            throw new Error(`必要なフィールドが不足しています (text: ${row.text}, kanji: ${row.kanji}, reading: ${row.reading})`);
+                        if (!row.text || !row.question || !row.reading) {
+                            throw new Error(`必要なフィールドが不足しています (text: ${row.text}, kanji: ${row.question}, reading: ${row.reading})`);
                         }
 
                         newQuestions.push({
                             text: row.text,
-                            kanji: row.kanji,
+                            question: row.question,
                             reading: row.reading
                         });
                     } catch (error) {

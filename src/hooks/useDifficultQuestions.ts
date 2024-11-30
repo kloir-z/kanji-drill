@@ -10,7 +10,7 @@ export const useDifficultQuestions = () => {
     });
 
     const generateQuestionId = (question: Question): string => {
-        return `${question.text}-${question.kanji}-${question.reading}`;
+        return `${question.text}-${question.question}-${question.reading}`;
     };
 
     const isDifficult = useCallback((question: Question): boolean => {
