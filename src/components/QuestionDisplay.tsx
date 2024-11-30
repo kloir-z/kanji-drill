@@ -22,7 +22,9 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
     return (
         <div className="min-w-[120px] mx-4">
             <div className="h-[28px]">
-                <div className={`transition-opacity duration-200 ${isAnswerShown ? 'opacity-100' : 'opacity-0'}`}>
+                <div
+                    className={`transition-opacity duration-200 ${isAnswerShown ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                >
                     <div className="flex justify-left">
                         {isDifficult ? (
                             <button
@@ -31,6 +33,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                     onMarkMastered(question);
                                 }}
                                 className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 min-w-[82px]"
+                                disabled={!isAnswerShown}
                             >
                                 覚えた
                             </button>
@@ -41,6 +44,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                     onMarkDifficult(question);
                                 }}
                                 className="px-2 py-1 text-xs bg-slate-500 text-white rounded hover:bg-red-600 min-w-[82px]"
+                                disabled={!isAnswerShown}
                             >
                                 苦手
                             </button>
