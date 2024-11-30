@@ -1,4 +1,4 @@
-import { ChangeEvent, useState, useEffect, useRef } from 'react';
+import { ChangeEvent, useState, useEffect } from 'react';
 import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
 import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
@@ -24,9 +24,8 @@ const KanjiDrill = () => {
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
     const [menuOptionDisabled, setMenuOptionDisabled] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState<string>('');
+    const [showFileButton, setShowFileButton] = useState(false);
     const [resetKey, setResetKey] = useState(0);
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -38,23 +37,23 @@ const KanjiDrill = () => {
 
         switch (value) {
             case 'new-file':
-                if (fileInputRef.current) {
-                    setTimeout(() => {
-                        fileInputRef.current?.click();
-                    }, 0);
-                }
+                setShowFileButton(true);
+                document.getElementById('file-input')?.click();
                 event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':
+                setShowFileButton(false);
                 setShowDifficultOnly(true);
                 setSelectedMenu('difficult-only');
                 break;
             case '':
+                setShowFileButton(false);
                 setSelectedFileId('');
                 setSelectedMenu('');
                 setShowDifficultOnly(false);
                 break;
             default:
+                setShowFileButton(false);
                 setSelectedFileId(value);
                 setSelectedMenu(value);
                 loadStoredFile(value);
@@ -135,6 +134,10 @@ const KanjiDrill = () => {
         }
     };
 
+    const handleFileButtonClick = () => {
+        document.getElementById('file-input')?.click();
+    };
+
     return (
         <div className="p-4">
             <div className="mb-4 flex items-center gap-2">
@@ -157,6 +160,15 @@ const KanjiDrill = () => {
                     )}
                 </select>
 
+                {showFileButton && (
+                    <button
+                        onClick={handleFileButtonClick}
+                        className="px-2 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    >
+                        ファイルを選択
+                    </button>
+                )}
+
                 {selectedFileId && !showDifficultOnly && (
                     <button
                         onClick={handleDeleteFile}
@@ -167,7 +179,6 @@ const KanjiDrill = () => {
                 )}
 
                 <input
-                    ref={fileInputRef}
                     id="file-input"
                     type="file"
                     accept=".csv"
