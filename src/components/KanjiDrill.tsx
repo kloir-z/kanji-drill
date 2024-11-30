@@ -22,43 +22,68 @@ const KanjiDrill = () => {
     const [questionsPerRow, setQuestionsPerRow] = useState(5);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
-    const [selectedFileName, setSelectedFileName] = useState<string>('');
+    const [menuOptionDisabled, setMenuOptionDisabled] = useState(false);
+    const [selectedMenu, setSelectedMenu] = useState<string>('');
+
+    const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+
+        if (value !== '') {
+            setMenuOptionDisabled(true);
+        }
+
+        switch (value) {
+            case 'new-file':
+                document.getElementById('file-input')?.click();
+                setShowDifficultOnly(false);
+                setSelectedFileId(value);
+                setSelectedMenu(selectedFileId);
+                break;
+            case 'difficult-only':
+                setShowDifficultOnly(true);
+                setSelectedMenu('difficult-only');
+                break;
+            case '':
+                setSelectedFileId('');
+                setSelectedMenu('');
+                setShowDifficultOnly(false);
+                break;
+            default:
+                setSelectedFileId(value);
+                setSelectedMenu(value);
+                loadStoredFile(value);
+                setShowDifficultOnly(false);
+                break;
+        }
+    };
 
     const displayQuestions = showDifficultOnly ? difficultQuestions : questions;
 
     const updateQuestionsPerRow = () => {
         const width = window.innerWidth;
-        // マージンの分も考慮して計算
-        const questionWidth = 120 + 32; // 最小幅 120px + マージン左右合計 32px
-        const availableWidth = width - 32; // padding 16px × 2
+        const questionWidth = 120 + 32;
+        const availableWidth = width - 32;
         const maxQuestions = Math.floor(availableWidth / questionWidth);
         setQuestionsPerRow(Math.max(2, Math.min(20, maxQuestions)));
     };
 
     useEffect(() => {
-        // 初期設定
         updateQuestionsPerRow();
 
-        // リサイズイベントのリスナーを設定
+        let timeoutId: NodeJS.Timeout;
         const handleResize = () => {
-            updateQuestionsPerRow();
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(updateQuestionsPerRow, 150);
         };
 
-        // デバウンス処理を追加してパフォーマンスを改善
-        let timeoutId: NodeJS.Timeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(handleResize, 150);
-        });
+        window.addEventListener('resize', handleResize);
 
-        // クリーンアップ関数
         return () => {
             window.removeEventListener('resize', handleResize);
             clearTimeout(timeoutId);
         };
     }, []);
 
-    // 設問を段組みに分割
     const rows = [];
     for (let i = 0; i < displayQuestions.length; i += questionsPerRow) {
         rows.push(displayQuestions.slice(i, i + questionsPerRow));
@@ -67,126 +92,66 @@ const KanjiDrill = () => {
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            setSelectedFileName(file.name);
             processCSV(file);
         }
     };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const file = e.dataTransfer.files[0];
-        if (file && file.type === 'text/csv') {
-            setSelectedFileName(file.name);
-            processCSV(file);
-        }
-    };
-
-    const handleStoredFileSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-        const id = event.target.value;
-        if (id) {
-            setSelectedFileId(id);
-            loadStoredFile(id);
-        }
-    };
-
-    const handleFileRemove = (id: string) => {
-        if (window.confirm('本当にこのファイルを削除しますか？')) {
-            removeStoredFile(id);
-            if (selectedFileId === id) {
-                setSelectedFileId('');
-            }
+    const handleDeleteFile = () => {
+        if (selectedFileId && window.confirm('このファイルを削除してもよろしいですか？')) {
+            removeStoredFile(selectedFileId);
+            setSelectedFileId('');
         }
     };
 
     return (
         <div className="p-4">
-            <div className="mb-2">
-                <div
-                    className="w-full max-w-2xl border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-gray-400 transition-colors duration-200"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
+            <div className="mb-4 flex items-center gap-2">
+                <select
+                    onChange={handleMenuSelect}
+                    className="block w-64 p-2 border border-gray-300 rounded"
+                    value={selectedMenu}
                 >
-                    <label className="cursor-pointer">
-                        <div className="space-y-2">
-                            <div className="text-gray-600">
-                                {selectedFileName ? (
-                                    <span className="text-blue-600">{selectedFileName}</span>
-                                ) : (
-                                    <>
-                                        <span className="text-blue-600 hover:text-blue-700">CSVファイルを読み込み</span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
-                    </label>
-                </div>
-
-                {errors.length > 0 && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        <ul className="list-none">
-                            {errors.map((error, index) => (
-                                <li key={index}>
-                                    行 {error.line}: {error.message}
-                                </li>
+                    <option value="" disabled={menuOptionDisabled}>メニュー</option>
+                    <option value="new-file">新しく読み込み...</option>
+                    <option value="difficult-only">苦手な問題のみ表示</option>
+                    {storedFiles.length > 0 && (
+                        <optgroup label="保存済みファイル">
+                            {storedFiles.map((file: StoredCSVFile) => (
+                                <option key={file.id} value={file.id}>
+                                    {file.name}
+                                </option>
                             ))}
-                        </ul>
-                    </div>
+                        </optgroup>
+                    )}
+                </select>
+
+                {selectedFileId && (
+                    <button
+                        onClick={handleDeleteFile}
+                        className="px-3 py-2 text-sm text-red-600 hover:text-red-800"
+                    >
+                        削除
+                    </button>
                 )}
+
+                <input
+                    id="file-input"
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
             </div>
 
-            {storedFiles.length > 0 && (
-                <div className="flex items-center gap-2">
-                    <select
-                        value={selectedFileId}
-                        onChange={handleStoredFileSelect}
-                        className="block w-64 p-2 border border-gray-300 rounded"
-                    >
-                        <option value="">保存ファイル...</option>
-                        {storedFiles.map((file: StoredCSVFile) => (
-                            <option key={file.id} value={file.id}>
-                                {file.name}
-                            </option>
+            {errors.length > 0 && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <ul className="list-none">
+                        {errors.map((error, index) => (
+                            <li key={index}>行 {error.line}: {error.message}</li>
                         ))}
-                    </select>
-                    {selectedFileId && (
-                        <button
-                            onClick={() => handleFileRemove(selectedFileId)}
-                            className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
-                        >
-                            削除
-                        </button>
-                    )}
+                    </ul>
                 </div>
             )}
-
-            <div className="mt-2 mb-2 flex gap-4">
-                <button
-                    onClick={() => setShowDifficultOnly(!showDifficultOnly)}
-                    className={`px-4 py-2 rounded ${showDifficultOnly
-                        ? 'bg-yellow-500 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                >
-                    {showDifficultOnly ? '全ての問題' : '苦手な問題のみ'}
-                </button>
-                {showDifficultOnly && (
-                    <span className="text-sm text-gray-600 self-center">
-                        {difficultQuestions.length}問
-                    </span>
-                )}
-            </div>
 
             <div className="flex flex-col gap-12">
                 {rows.map((row, rowIndex) => (

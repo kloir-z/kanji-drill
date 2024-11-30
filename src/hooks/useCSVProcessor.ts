@@ -81,9 +81,6 @@ export const useCSVProcessor = () => {
                 updatedFiles = [newStoredFile, ...storedFiles.slice(0, 9)];
             }
 
-            // 最終使用日時でソート
-            updatedFiles.sort((a, b) => b.lastUsed - a.lastUsed);
-
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
             setStoredFiles(updatedFiles);
 
@@ -102,7 +99,7 @@ export const useCSVProcessor = () => {
             // 最終使用日時を更新
             const updatedFiles = storedFiles.map(f =>
                 f.id === id ? { ...f, lastUsed: Date.now() } : f
-            ).sort((a, b) => b.lastUsed - a.lastUsed);
+            );
 
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
             setStoredFiles(updatedFiles);
