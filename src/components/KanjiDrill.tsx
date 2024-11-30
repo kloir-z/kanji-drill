@@ -24,7 +24,15 @@ const KanjiDrill = () => {
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
     const [menuOptionDisabled, setMenuOptionDisabled] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState<string>('');
+    const [shouldOpenFileDialog, setShouldOpenFileDialog] = useState(false);
     const [resetKey, setResetKey] = useState(0);
+
+    useEffect(() => {
+        if (shouldOpenFileDialog) {
+            document.getElementById('file-input')?.click();
+            setShouldOpenFileDialog(false);
+        }
+    }, [shouldOpenFileDialog]);
 
     const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -36,7 +44,7 @@ const KanjiDrill = () => {
 
         switch (value) {
             case 'new-file':
-                document.getElementById('file-input')?.click();
+                setShouldOpenFileDialog(true);
                 event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':

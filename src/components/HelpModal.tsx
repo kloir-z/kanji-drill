@@ -43,7 +43,7 @@ export const HelpModal = ({ isOpen, onClose }: HelpModalProps) => {
                     <h3 className="font-bold mt-6 mb-2">作成方法1: 表計算ソフトを使う場合</h3>
                     <ol className="list-decimal pl-6 space-y-2">
                         <li>ExcelやNumbersなどの表計算ソフトを開きます。</li>
-                        <li>1行目に「text」「question」「reading」と入力します。</li>
+                        <li>1行目はA1セルに「text」、A2セルに「question」、A3セルに「reading」と入力します。</li>
                         <li>2行目以降に問題文、漢字、読み方を入力します。</li>
                         <li>「CSVでエクスポート」や「名前を付けて保存」から、ファイルの種類を「CSV（カンマ区切り）」を選択して保存します。</li>
                     </ol>
