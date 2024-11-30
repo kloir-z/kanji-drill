@@ -1,4 +1,4 @@
-import { ChangeEvent, useState, useEffect } from 'react';
+import { ChangeEvent, useState, useEffect, useRef } from 'react';
 import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
 import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
@@ -24,15 +24,9 @@ const KanjiDrill = () => {
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
     const [menuOptionDisabled, setMenuOptionDisabled] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState<string>('');
-    const [shouldOpenFileDialog, setShouldOpenFileDialog] = useState(false);
     const [resetKey, setResetKey] = useState(0);
 
-    useEffect(() => {
-        if (shouldOpenFileDialog) {
-            document.getElementById('file-input')?.click();
-            setShouldOpenFileDialog(false);
-        }
-    }, [shouldOpenFileDialog]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -44,8 +38,11 @@ const KanjiDrill = () => {
 
         switch (value) {
             case 'new-file':
-                setSelectedMenu(value);
-                setShouldOpenFileDialog(true);
+                if (fileInputRef.current) {
+                    setTimeout(() => {
+                        fileInputRef.current?.click();
+                    }, 0);
+                }
                 event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':
@@ -170,6 +167,7 @@ const KanjiDrill = () => {
                 )}
 
                 <input
+                    ref={fileInputRef}
                     id="file-input"
                     type="file"
                     accept=".csv"
