@@ -44,6 +44,7 @@ const KanjiDrill = () => {
 
         switch (value) {
             case 'new-file':
+                setSelectedMenu(value);
                 setShouldOpenFileDialog(true);
                 event.target.value = selectedMenu || '';
                 break;
