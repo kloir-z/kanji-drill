@@ -3,6 +3,8 @@ import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
 import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
 import { StoredCSVFile } from '../types';
+import { HiPlus } from 'react-icons/hi';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const KanjiDrill = () => {
     const {
@@ -19,6 +21,7 @@ const KanjiDrill = () => {
         addDifficultQuestion,
         removeDifficultQuestion
     } = useDifficultQuestions();
+    const isMobile = useIsMobile();
     const [questionsPerRow, setQuestionsPerRow] = useState(5);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
@@ -123,14 +126,16 @@ const KanjiDrill = () => {
         }
     };
 
-
     const handleDeleteFile = () => {
-        if (selectedFileId && window.confirm('このファイルを削除してもよろしいですか？')) {
-            removeStoredFile(selectedFileId);
-            // 状態をリセット
-            setSelectedFileId('');
-            setSelectedMenu('');
-            setMenuOptionDisabled(false);
+        if (selectedFileId) {
+            const selectedFile = storedFiles.find(file => file.id === selectedFileId);
+            const fileName = selectedFile?.name || 'このファイル';
+            if (window.confirm(`"${fileName}" を削除してもよろしいですか？`)) {
+                removeStoredFile(selectedFileId);
+                setSelectedFileId('');
+                setSelectedMenu('');
+                setMenuOptionDisabled(false);
+            }
         }
     };
 
@@ -160,12 +165,12 @@ const KanjiDrill = () => {
                     )}
                 </select>
 
-                {showFileButton && (
+                {showFileButton && isMobile && (
                     <button
                         onClick={handleFileButtonClick}
-                        className="px-2 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                        className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
                     >
-                        ファイルを選択
+                        <HiPlus className="w-5 h-5" />
                     </button>
                 )}
 

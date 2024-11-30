@@ -21,7 +21,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
     };
 
     return (
-        <div className="min-w-[120px] mx-4">
+        <div className="min-w-[120px] min-h-full mx-4">
             <div className="h-[28px]">
                 <div
                     className={`transition-opacity duration-200 ${isAnswerShown ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -65,10 +65,10 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                 {partIndex < array.length - 1 && (
                                     <div className="relative inline-block">
                                         <span className="inline-block relative">
-                                            <span className={`text-4xl mx-auto flex ${!isKanjiOnly ? 'border border-gray-600 px-5 py-9 min-h-[144px] items-center mt-2' : ''}`}>
+                                            <span className={`text-4xl mx-auto flex ${!isKanjiOnly ? 'border border-gray-600  bg-white px-5 py-9 min-h-[144px] items-center mt-2' : ''}`}>
                                                 {isKanjiOnly ? (
                                                     Array.from(question.question).map((char, idx) => (
-                                                        <span key={idx} className="kanji-box flex items-center justify-center">
+                                                        <span key={idx} className="kanji-box bg-white flex items-center justify-center">
                                                             {isAnswerShown ? (
                                                                 <span className="text-red-600">{char}</span>
                                                             ) : (
