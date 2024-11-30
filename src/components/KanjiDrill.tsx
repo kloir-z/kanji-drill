@@ -35,9 +35,7 @@ const KanjiDrill = () => {
         switch (value) {
             case 'new-file':
                 document.getElementById('file-input')?.click();
-                setShowDifficultOnly(false);
-                setSelectedFileId(value);
-                setSelectedMenu(selectedFileId);
+                event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':
                 setShowDifficultOnly(true);
@@ -77,11 +75,15 @@ const KanjiDrill = () => {
         };
 
         window.addEventListener('resize', handleResize);
+        if (selectedFileId) {
+            loadStoredFile(selectedFileId);
+        }
 
         return () => {
             window.removeEventListener('resize', handleResize);
             clearTimeout(timeoutId);
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const rows = [];
@@ -89,12 +91,33 @@ const KanjiDrill = () => {
         rows.push(displayQuestions.slice(i, i + questionsPerRow));
     }
 
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            processCSV(file);
+            const fileId = await processCSV(file);
+            if (fileId) {
+                setSelectedFileId(fileId);
+                setSelectedMenu(fileId);
+                setMenuOptionDisabled(true);
+                setShowDifficultOnly(false);  // 実際にファイルが読み込まれた時に変更
+            }
+        } else {
+            // キャンセルされた場合、前回の状態を維持
+            if (showDifficultOnly) {
+                setSelectedMenu('difficult-only');
+            } else if (selectedFileId) {
+                setSelectedMenu(selectedFileId);
+            } else {
+                setSelectedMenu('');
+                setMenuOptionDisabled(false);
+            }
+        }
+        // ファイル入力をリセットして、同じファイルを再度選択できるようにする
+        if (event.target instanceof HTMLInputElement) {
+            event.target.value = '';
         }
     };
+
 
     const handleDeleteFile = () => {
         if (selectedFileId && window.confirm('このファイルを削除してもよろしいですか？')) {
@@ -125,7 +148,7 @@ const KanjiDrill = () => {
                     )}
                 </select>
 
-                {selectedFileId && (
+                {selectedFileId && !showDifficultOnly && (
                     <button
                         onClick={handleDeleteFile}
                         className="px-3 py-2 text-sm text-red-600 hover:text-red-800"

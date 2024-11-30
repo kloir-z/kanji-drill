@@ -61,36 +61,36 @@ export const useCSVProcessor = () => {
             const decoder = new TextDecoder(encoding.toLowerCase());
             const content = decoder.decode(uint8Array);
 
-            // 同じ名前のファイルが存在するか確認
             const existingFileIndex = storedFiles.findIndex(f => f.name === file.name);
+            const fileId = existingFileIndex >= 0 ? storedFiles[existingFileIndex].id : crypto.randomUUID();
 
-            let updatedFiles: StoredCSVFile[];
             const newStoredFile: StoredCSVFile = {
-                id: existingFileIndex >= 0 ? storedFiles[existingFileIndex].id : crypto.randomUUID(),
+                id: fileId,
                 name: file.name,
                 content: content,
                 lastUsed: Date.now()
             };
 
+            let updatedFiles: StoredCSVFile[];
             if (existingFileIndex >= 0) {
-                // 同じ名前のファイルが存在する場合は上書き
                 updatedFiles = [...storedFiles];
                 updatedFiles[existingFileIndex] = newStoredFile;
             } else {
-                // 新規ファイルの場合は先頭に追加（最大10件まで）
                 updatedFiles = [newStoredFile, ...storedFiles.slice(0, 9)];
             }
 
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
             setStoredFiles(updatedFiles);
-
             processCSVContent(content);
+
+            return fileId;
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             setErrors([{
                 line: 0,
                 message: 'ファイルの読み込みに失敗しました'
             }]);
+            return null;
         }
     };
     const loadStoredFile = (id: string) => {
