@@ -9,7 +9,8 @@ interface QuestionDisplayProps {
 }
 
 export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMarkMastered }: QuestionDisplayProps) => {
-    const [isAnswerShown, setIsAnswerShown] = useState(false); const parts = question.text.split(question.question);
+    const [isAnswerShown, setIsAnswerShown] = useState(false);
+    const parts = question.text.split(question.question);
     const kanjiOnly = /^[\u4E00-\u9FFF]+$/;
     // eslint-disable-next-line no-irregular-whitespace
     const readingText = `　${question.reading}`;
@@ -53,7 +54,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                 </div>
             </div>
             <div
-                className="writing-vertical inline-flex flex-col items-center text-2xl whitespace-nowrap"
+                className="writing-vertical inline-flex flex-col items-center text-2xl whitespace-nowrap cursor-default"
                 onClick={toggleAnswer}
             >
                 <div className="writing-vertical inline-flex flex-col items-center text-2xl whitespace-nowrap">

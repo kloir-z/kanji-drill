@@ -24,9 +24,11 @@ const KanjiDrill = () => {
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
     const [menuOptionDisabled, setMenuOptionDisabled] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState<string>('');
+    const [resetKey, setResetKey] = useState(0);
 
     const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
+        setResetKey(prev => prev + 1);
 
         if (value !== '') {
             setMenuOptionDisabled(true);
@@ -83,7 +85,7 @@ const KanjiDrill = () => {
             window.removeEventListener('resize', handleResize);
             clearTimeout(timeoutId);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const rows = [];
@@ -99,10 +101,9 @@ const KanjiDrill = () => {
                 setSelectedFileId(fileId);
                 setSelectedMenu(fileId);
                 setMenuOptionDisabled(true);
-                setShowDifficultOnly(false);  // 実際にファイルが読み込まれた時に変更
+                setShowDifficultOnly(false);
             }
         } else {
-            // キャンセルされた場合、前回の状態を維持
             if (showDifficultOnly) {
                 setSelectedMenu('difficult-only');
             } else if (selectedFileId) {
@@ -112,7 +113,6 @@ const KanjiDrill = () => {
                 setMenuOptionDisabled(false);
             }
         }
-        // ファイル入力をリセットして、同じファイルを再度選択できるようにする
         if (event.target instanceof HTMLInputElement) {
             event.target.value = '';
         }
@@ -122,7 +122,10 @@ const KanjiDrill = () => {
     const handleDeleteFile = () => {
         if (selectedFileId && window.confirm('このファイルを削除してもよろしいですか？')) {
             removeStoredFile(selectedFileId);
+            // 状態をリセット
             setSelectedFileId('');
+            setSelectedMenu('');
+            setMenuOptionDisabled(false);
         }
     };
 
@@ -178,11 +181,11 @@ const KanjiDrill = () => {
 
             <div className="flex flex-col gap-12">
                 {rows.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex justify-end">
+                    <div key={`${selectedFileId}-${rowIndex}`} className="flex justify-end">
                         <div className="flex flex-row-reverse items-start">
-                            {row.map((question, index) => (
+                            {row.map((question) => (
                                 <QuestionDisplay
-                                    key={index}
+                                    key={`${question.text}-${question.question}-${resetKey}`}
                                     question={question}
                                     isDifficult={isDifficult(question)}
                                     onMarkDifficult={addDifficultQuestion}

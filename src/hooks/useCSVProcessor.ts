@@ -112,6 +112,7 @@ export const useCSVProcessor = () => {
         const updatedFiles = storedFiles.filter(f => f.id !== id);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
         setStoredFiles(updatedFiles);
+        setQuestions([]);
     };
 
     return {
