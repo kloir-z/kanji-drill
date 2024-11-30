@@ -22,6 +22,7 @@ const KanjiDrill = () => {
     const [questionsPerRow, setQuestionsPerRow] = useState(5);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
     const [showDifficultOnly, setShowDifficultOnly] = useState(false);
+    const [selectedFileName, setSelectedFileName] = useState<string>('');
 
     const displayQuestions = showDifficultOnly ? difficultQuestions : questions;
 
@@ -66,6 +67,22 @@ const KanjiDrill = () => {
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            setSelectedFileName(file.name);
+            processCSV(file);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type === 'text/csv') {
+            setSelectedFileName(file.name);
             processCSV(file);
         }
     };
@@ -88,37 +105,30 @@ const KanjiDrill = () => {
     return (
         <div className="p-4">
             <div className="mb-4">
-                <div className="flex gap-4 items-center mb-4">
-                    <input
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileChange}
-                        className="block text-sm text-gray-500"
-                    />
-                    {storedFiles.length > 0 && (
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={selectedFileId}
-                                onChange={handleStoredFileSelect}
-                                className="block w-64 p-2 border border-gray-300 rounded"
-                            >
-                                <option value="">保存されたファイルを選択...</option>
-                                {storedFiles.map((file: StoredCSVFile) => (
-                                    <option key={file.id} value={file.id}>
-                                        {file.name}
-                                    </option>
-                                ))}
-                            </select>
-                            {selectedFileId && (
-                                <button
-                                    onClick={() => handleFileRemove(selectedFileId)}
-                                    className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
-                                >
-                                    削除
-                                </button>
-                            )}
+                <div
+                    className="w-full max-w-2xl border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-gray-400 transition-colors duration-200"
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                >
+                    <label className="cursor-pointer">
+                        <div className="space-y-2">
+                            <div className="text-gray-600">
+                                {selectedFileName ? (
+                                    <span className="text-blue-600">{selectedFileName}</span>
+                                ) : (
+                                    <>
+                                        <span className="text-blue-600 hover:text-blue-700">CSVファイルを読み込み</span>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                    )}
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+                    </label>
                 </div>
 
                 {errors.length > 0 && (
@@ -134,6 +144,31 @@ const KanjiDrill = () => {
                 )}
             </div>
 
+            {storedFiles.length > 0 && (
+                <div className="flex items-center gap-2">
+                    <select
+                        value={selectedFileId}
+                        onChange={handleStoredFileSelect}
+                        className="block w-64 p-2 border border-gray-300 rounded"
+                    >
+                        <option value="">保存ファイル...</option>
+                        {storedFiles.map((file: StoredCSVFile) => (
+                            <option key={file.id} value={file.id}>
+                                {file.name}
+                            </option>
+                        ))}
+                    </select>
+                    {selectedFileId && (
+                        <button
+                            onClick={() => handleFileRemove(selectedFileId)}
+                            className="px-2 py-1 text-sm text-red-600 hover:text-red-800"
+                        >
+                            削除
+                        </button>
+                    )}
+                </div>
+            )}
+
             <div className="mt-4 flex gap-4">
                 <button
                     onClick={() => setShowDifficultOnly(!showDifficultOnly)}
@@ -142,11 +177,11 @@ const KanjiDrill = () => {
                         : 'bg-gray-200 hover:bg-gray-300'
                         }`}
                 >
-                    {showDifficultOnly ? '全ての問題を表示' : '苦手な問題のみ表示'}
+                    {showDifficultOnly ? '全ての問題' : '苦手な問題のみ'}
                 </button>
                 {showDifficultOnly && (
                     <span className="text-sm text-gray-600 self-center">
-                        苦手な問題: {difficultQuestions.length}問
+                        {difficultQuestions.length}問
                     </span>
                 )}
             </div>
