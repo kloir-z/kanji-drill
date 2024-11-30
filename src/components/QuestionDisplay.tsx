@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { Question } from '../types';
 
-export const QuestionDisplay = ({ question }: { question: Question }) => {
-    const [isAnswerShown, setIsAnswerShown] = useState(false);
-    const parts = question.text.split(question.kanji);
+interface QuestionDisplayProps {
+    question: Question;
+    isDifficult: boolean;
+    onMarkDifficult: (question: Question) => void;
+    onMarkMastered: (question: Question) => void;
+}
+
+export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMarkMastered }: QuestionDisplayProps) => {
+    const [isAnswerShown, setIsAnswerShown] = useState(false); const parts = question.text.split(question.kanji);
     const kanjiOnly = /^[\u4E00-\u9FFF]+$/;
     // eslint-disable-next-line no-irregular-whitespace
     const readingText = `　${question.reading}`;
@@ -18,6 +24,31 @@ export const QuestionDisplay = ({ question }: { question: Question }) => {
             className="min-w-[120px] mx-4 flex justify-center"
             onClick={toggleAnswer}
         >
+            {isAnswerShown && (
+                <div className="mt-4 flex gap-2">
+                    {isDifficult ? (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkMastered(question);
+                            }}
+                            className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                        >
+                            覚えた
+                        </button>
+                    ) : (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkDifficult(question);
+                            }}
+                            className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                            苦手
+                        </button>
+                    )}
+                </div>
+            )}
             <div className="writing-vertical inline-flex flex-col items-center text-2xl whitespace-nowrap">
                 <div className="flex items-center">
                     {parts.map((part, partIndex, array) => (

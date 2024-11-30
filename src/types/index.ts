@@ -15,3 +15,8 @@ export interface StoredCSVFile {
     content: string;
     lastUsed: number;
 }
+
+export interface DifficultQuestion extends Question {
+    id: string;
+    timestamp: number;
+}

@@ -1,6 +1,7 @@
 import { ChangeEvent, useState, useEffect } from 'react';
 import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
+import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
 import { StoredCSVFile } from '../types';
 
 const KanjiDrill = () => {
@@ -12,8 +13,17 @@ const KanjiDrill = () => {
         loadStoredFile,
         removeStoredFile
     } = useCSVProcessor();
+    const {
+        difficultQuestions,
+        isDifficult,
+        addDifficultQuestion,
+        removeDifficultQuestion
+    } = useDifficultQuestions();
     const [questionsPerRow, setQuestionsPerRow] = useState(5);
     const [selectedFileId, setSelectedFileId] = useState<string>('');
+    const [showDifficultOnly, setShowDifficultOnly] = useState(false);
+
+    const displayQuestions = showDifficultOnly ? difficultQuestions : questions;
 
     const updateQuestionsPerRow = () => {
         const width = window.innerWidth;
@@ -49,8 +59,8 @@ const KanjiDrill = () => {
 
     // 設問を段組みに分割
     const rows = [];
-    for (let i = 0; i < questions.length; i += questionsPerRow) {
-        rows.push(questions.slice(i, i + questionsPerRow));
+    for (let i = 0; i < displayQuestions.length; i += questionsPerRow) {
+        rows.push(displayQuestions.slice(i, i + questionsPerRow));
     }
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -124,12 +134,35 @@ const KanjiDrill = () => {
                 )}
             </div>
 
+            <div className="mt-4 flex gap-4">
+                <button
+                    onClick={() => setShowDifficultOnly(!showDifficultOnly)}
+                    className={`px-4 py-2 rounded ${showDifficultOnly
+                        ? 'bg-yellow-500 text-white'
+                        : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                >
+                    {showDifficultOnly ? '全ての問題を表示' : '苦手な問題のみ表示'}
+                </button>
+                {showDifficultOnly && (
+                    <span className="text-sm text-gray-600 self-center">
+                        苦手な問題: {difficultQuestions.length}問
+                    </span>
+                )}
+            </div>
+
             <div className="flex flex-col gap-12">
                 {rows.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex justify-end">
                         <div className="flex flex-row-reverse items-start">
                             {row.map((question, index) => (
-                                <QuestionDisplay key={index} question={question} />
+                                <QuestionDisplay
+                                    key={index}
+                                    question={question}
+                                    isDifficult={isDifficult(question)}
+                                    onMarkDifficult={addDifficultQuestion}
+                                    onMarkMastered={removeDifficultQuestion}
+                                />
                             ))}
                         </div>
                     </div>
