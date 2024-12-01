@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/papaparse": "^5.3.15",
     "autoprefixer": "^10.4.20",
+    "filename-reserved-regex": "^3.0.0",
     "jschardet": "^3.1.4",
     "papaparse": "^5.4.1",
     "postcss": "^8.4.49",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@types/filename-reserved-regex": "^3.0.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

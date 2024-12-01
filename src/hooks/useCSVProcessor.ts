@@ -115,12 +115,30 @@ export const useCSVProcessor = () => {
         setQuestions([]);
     };
 
+    const updateStoredFile = (id: string, content: string, newFileName: string) => {
+        const updatedFiles = storedFiles.map(f => {
+            if (f.id === id) {
+                // 既存の拡張子を保持
+                const extension = f.name.split('.').pop() || 'csv';
+                const newName = `${newFileName}.${extension}`;
+                return { ...f, content, name: newName, lastUsed: Date.now() };
+            }
+            return f;
+        });
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
+        setStoredFiles(updatedFiles);
+        processCSVContent(content);
+    };
+
+
     return {
         questions,
         errors,
         storedFiles,
         processCSV,
         loadStoredFile,
-        removeStoredFile
+        removeStoredFile,
+        updateStoredFile
     };
 };

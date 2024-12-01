@@ -5,6 +5,7 @@ import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
 import { StoredCSVFile } from '../types';
 import { HiPlus } from 'react-icons/hi';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { EditModal } from './EditModal';
 
 const KanjiDrill = () => {
     const {
@@ -13,7 +14,8 @@ const KanjiDrill = () => {
         storedFiles,
         processCSV,
         loadStoredFile,
-        removeStoredFile
+        removeStoredFile,
+        updateStoredFile
     } = useCSVProcessor();
     const {
         difficultQuestions,
@@ -29,6 +31,22 @@ const KanjiDrill = () => {
     const [selectedMenu, setSelectedMenu] = useState<string>('');
     const [showFileButton, setShowFileButton] = useState(false);
     const [resetKey, setResetKey] = useState(0);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isNewFile, setIsNewFile] = useState(false);
+
+    const handleEditClick = () => {
+        setIsNewFile(false);
+        setIsEditModalOpen(true);
+    };
+
+    const handleNewFile = () => {
+        setIsNewFile(true);
+        setIsEditModalOpen(true);
+    };
+
+    const handleSave = (content: string, newFileName: string) => {
+        updateStoredFile(selectedFileId, content, newFileName);
+    };
 
     const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value;
@@ -42,6 +60,10 @@ const KanjiDrill = () => {
             case 'new-file':
                 setShowFileButton(true);
                 document.getElementById('file-input')?.click();
+                event.target.value = selectedMenu || '';
+                break;
+            case 'create-new':
+                handleNewFile();
                 event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':
@@ -144,7 +166,7 @@ const KanjiDrill = () => {
     };
 
     return (
-        <div className="p-4">
+        <div className="p-2">
             <div className="mb-4 flex items-center gap-2">
                 <select
                     onChange={handleMenuSelect}
@@ -152,6 +174,7 @@ const KanjiDrill = () => {
                     value={selectedMenu}
                 >
                     <option value="" disabled={menuOptionDisabled}>メニュー</option>
+                    <option value="create-new">新規作成...</option>
                     <option value="new-file">新しく読み込み...</option>
                     <option value="difficult-only">苦手な問題のみ表示</option>
                     {storedFiles.length > 0 && (
@@ -176,11 +199,26 @@ const KanjiDrill = () => {
 
                 {selectedFileId && !showDifficultOnly && (
                     <button
-                        onClick={handleDeleteFile}
-                        className="px-3 py-2 text-sm text-red-600 hover:text-red-800"
+                        onClick={handleEditClick}
+                        className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
                     >
-                        削除
+                        編集
                     </button>
+                )}
+
+                {selectedFileId && (
+                    <EditModal
+                        isOpen={isEditModalOpen}
+                        content={isNewFile ? '' : (storedFiles.find(f => f.id === selectedFileId)?.content || '')}
+                        fileName={isNewFile ? '' : (storedFiles.find(f => f.id === selectedFileId)?.name || '')}
+                        onSave={handleSave}
+                        onDelete={isNewFile ? undefined : handleDeleteFile}
+                        onClose={() => {
+                            setIsEditModalOpen(false);
+                            setIsNewFile(false);
+                        }}
+                        isNewFile={isNewFile}
+                    />
                 )}
 
                 <input
