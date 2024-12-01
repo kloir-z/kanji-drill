@@ -5,13 +5,41 @@ import { detectEncoding } from '../utils/encoding';
 
 const STORAGE_KEY = 'stored_csv_files';
 
-export const useCSVProcessor = () => {
+interface CSVProcessorResult {
+    questions: Question[];
+    errors: ParseError[];
+    storedFiles: StoredCSVFile[];
+    processCSV: (file: File) => Promise<string | null>;
+    loadStoredFile: (id: string) => void;
+    removeStoredFile: (id: string) => void;
+    updateStoredFile: (id: string, content: string, newFileName: string) => void;
+    createNewFile: (content: string, fileName: string) => string;
+}
+
+export const useCSVProcessor = (): CSVProcessorResult => {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [errors, setErrors] = useState<ParseError[]>([]);
     const [storedFiles, setStoredFiles] = useState<StoredCSVFile[]>(() => {
         const stored = localStorage.getItem(STORAGE_KEY);
         return stored ? JSON.parse(stored) : [];
     });
+
+    const createNewFile = (content: string, fileName: string) => {
+        const newId = crypto.randomUUID();
+        const newFile: StoredCSVFile = {
+            id: newId,
+            name: `${fileName}.csv`,
+            content: content,
+            lastUsed: Date.now()
+        };
+
+        const updatedFiles = [newFile, ...storedFiles.slice(0, 9)];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFiles));
+        setStoredFiles(updatedFiles);
+        processCSVContent(content);
+
+        return newId;
+    };
 
     const processCSVContent = useCallback((content: string) => {
         Papa.parse(content, {
@@ -139,6 +167,7 @@ export const useCSVProcessor = () => {
         processCSV,
         loadStoredFile,
         removeStoredFile,
-        updateStoredFile
+        updateStoredFile,
+        createNewFile
     };
 };

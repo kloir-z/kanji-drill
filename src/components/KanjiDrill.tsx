@@ -15,7 +15,8 @@ const KanjiDrill = () => {
         processCSV,
         loadStoredFile,
         removeStoredFile,
-        updateStoredFile
+        updateStoredFile,
+        createNewFile
     } = useCSVProcessor();
     const {
         difficultQuestions,
@@ -39,13 +40,14 @@ const KanjiDrill = () => {
         setIsEditModalOpen(true);
     };
 
-    const handleNewFile = () => {
-        setIsNewFile(true);
-        setIsEditModalOpen(true);
-    };
-
     const handleSave = (content: string, newFileName: string) => {
-        updateStoredFile(selectedFileId, content, newFileName);
+        if (isNewFile) {
+            const newId = createNewFile(content, newFileName);
+            setSelectedFileId(newId);
+            setSelectedMenu(newId);
+        } else {
+            updateStoredFile(selectedFileId, content, newFileName);
+        }
     };
 
     const handleMenuSelect = (event: ChangeEvent<HTMLSelectElement>) => {
@@ -63,7 +65,9 @@ const KanjiDrill = () => {
                 event.target.value = selectedMenu || '';
                 break;
             case 'create-new':
-                handleNewFile();
+                setIsNewFile(true);
+                setIsEditModalOpen(true);
+                setSelectedMenu(selectedMenu || '');
                 event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':
@@ -206,20 +210,18 @@ const KanjiDrill = () => {
                     </button>
                 )}
 
-                {selectedFileId && (
-                    <EditModal
-                        isOpen={isEditModalOpen}
-                        content={isNewFile ? '' : (storedFiles.find(f => f.id === selectedFileId)?.content || '')}
-                        fileName={isNewFile ? '' : (storedFiles.find(f => f.id === selectedFileId)?.name || '')}
-                        onSave={handleSave}
-                        onDelete={isNewFile ? undefined : handleDeleteFile}
-                        onClose={() => {
-                            setIsEditModalOpen(false);
-                            setIsNewFile(false);
-                        }}
-                        isNewFile={isNewFile}
-                    />
-                )}
+                <EditModal
+                    isOpen={isEditModalOpen}
+                    content={isNewFile ? '' : (storedFiles.find(f => f.id === selectedFileId)?.content || '')}
+                    fileName={isNewFile ? '' : (storedFiles.find(f => f.id === selectedFileId)?.name || '')}
+                    onSave={handleSave}
+                    onDelete={isNewFile ? undefined : handleDeleteFile}
+                    onClose={() => {
+                        setIsEditModalOpen(false);
+                        setIsNewFile(false);
+                    }}
+                    isNewFile={isNewFile}
+                />
 
                 <input
                     id="file-input"

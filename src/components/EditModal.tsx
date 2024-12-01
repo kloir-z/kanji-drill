@@ -17,11 +17,21 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
     const [fileNameError, setFileNameError] = useState("");
 
     useEffect(() => {
-        setEditedContent(content);
-        // 拡張子を除いたファイル名を設定
-        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-        setEditedFileName(nameWithoutExt);
-    }, [content, fileName]);
+        const resetState = () => {
+            setEditedContent(content);
+            const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+            setEditedFileName(nameWithoutExt);
+            setFileNameError("");
+        };
+        if (isOpen) {
+            resetState();
+        }
+    }, [isOpen, content, fileName]);
+
+    const handleClose = () => {
+        setFileNameError("");
+        onClose();
+    };
 
     if (!isOpen) return null;
 
@@ -65,7 +75,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                         {isNewFile ? '新規ファイルを作成' : 'ファイルを編集'}
                     </h2>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="text-gray-500 hover:text-gray-700"
                     >
                         ✕
@@ -107,7 +117,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                         </button>
                     )}
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="px-4 py-2 text-gray-600 hover:text-gray-800"
                     >
                         キャンセル
