@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import filenameReserved from "filename-reserved-regex";
+import { CSVEditor } from './CSVEditor';
 
 interface EditModalProps {
     isOpen: boolean;
@@ -18,7 +19,8 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
 
     useEffect(() => {
         const resetState = () => {
-            setEditedContent(content);
+            const initialContent = isNewFile ? "text,question,reading\n" : content;
+            setEditedContent(initialContent);
             const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
             setEditedFileName(nameWithoutExt);
             setFileNameError("");
@@ -26,7 +28,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
         if (isOpen) {
             resetState();
         }
-    }, [isOpen, content, fileName]);
+    }, [isOpen, content, fileName, isNewFile]);
 
     const handleClose = () => {
         setFileNameError("");
@@ -102,11 +104,12 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                     )}
                 </div>
 
-                <textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="flex-grow w-full p-4 border border-gray-300 rounded mb-4 font-mono"
-                />
+                <div className="flex-grow">
+                    <CSVEditor
+                        value={editedContent}
+                        onChange={setEditedContent}
+                    />
+                </div>
                 <div className="flex justify-end gap-4">
                     {onDelete && (
                         <button
