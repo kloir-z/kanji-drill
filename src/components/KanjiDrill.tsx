@@ -174,7 +174,7 @@ const KanjiDrill = () => {
             <div className="mb-4 flex items-center gap-2">
                 <select
                     onChange={handleMenuSelect}
-                    className="block w-64 p-2 border border-gray-300 rounded"
+                    className="block w-54 p-2 border border-gray-300 rounded"
                     value={selectedMenu}
                 >
                     <option value="" disabled={menuOptionDisabled}>メニュー</option>

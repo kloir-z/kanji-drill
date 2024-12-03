@@ -77,11 +77,11 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
     };
 
     const modalClasses = isMobile
-        ? "fixed inset-0 bg-white flex flex-col h-screen w-screen z-50"
+        ? "fixed inset-0 bg-white z-50 flex flex-col"
         : "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
 
     const contentClasses = isMobile
-        ? "flex flex-col h-full w-full"
+        ? "flex flex-col h-[100dvh]"
         : "bg-white p-6 rounded-lg w-full max-w-4xl mx-4 flex flex-col h-[80vh]";
 
     const editorContainerClasses = isMobile
@@ -89,7 +89,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
         : "flex-grow min-h-0";
 
     const buttonContainerClasses = isMobile
-        ? "p-4 bg-white border-t border-gray-200"
+        ? "p-4 bg-white border-t border-gray-200 pb-8"
         : "flex justify-end gap-4 mt-4";
 
     return (

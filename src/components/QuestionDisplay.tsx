@@ -33,7 +33,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                     e.stopPropagation();
                                     onMarkMastered(question);
                                 }}
-                                className="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 min-w-[82px]"
+                                className="px-2 py-1 text-xs bg-green-500 text-white rounded min-w-[82px]"
                                 disabled={!isAnswerShown}
                             >
                                 覚えた
@@ -44,7 +44,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                     e.stopPropagation();
                                     onMarkDifficult(question);
                                 }}
-                                className="px-2 py-1 text-xs bg-slate-500 text-white rounded hover:bg-red-600 min-w-[82px]"
+                                className="px-2 py-1 text-xs bg-slate-500 text-white rounded min-w-[82px]"
                                 disabled={!isAnswerShown}
                             >
                                 苦手
