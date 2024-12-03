@@ -2,8 +2,8 @@ import { ChangeEvent, useState, useEffect } from 'react';
 import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
 import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
-import { StoredCSVFile } from '../types';
-import { HiPlus } from 'react-icons/hi';
+import { StoredCSVFile, Question } from '../types';
+import { HiPlus, HiOutlineSwitchHorizontal } from 'react-icons/hi';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { EditModal } from './EditModal';
 
@@ -34,10 +34,38 @@ const KanjiDrill = () => {
     const [resetKey, setResetKey] = useState(0);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isNewFile, setIsNewFile] = useState(false);
+    const [currentQuestions, setCurrentQuestions] = useState<Question[]>([]);
+    const [shuffledDifficultQuestions, setShuffledDifficultQuestions] = useState<Question[]>([]);
+
+    useEffect(() => {
+        setCurrentQuestions(questions);
+    }, [questions]);
+
+    useEffect(() => {
+        setShuffledDifficultQuestions(difficultQuestions);
+    }, [difficultQuestions]);
 
     const handleEditClick = () => {
         setIsNewFile(false);
         setIsEditModalOpen(true);
+    };
+
+    const shuffleArray = <T,>(array: T[]): T[] => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
+    const handleShuffle = () => {
+        if (showDifficultOnly) {
+            setShuffledDifficultQuestions(prev => shuffleArray(prev));
+        } else {
+            setCurrentQuestions(prev => shuffleArray(prev));
+        }
+        setResetKey(prev => prev + 1);
     };
 
     const handleSave = (content: string, newFileName: string) => {
@@ -91,7 +119,7 @@ const KanjiDrill = () => {
         }
     };
 
-    const displayQuestions = showDifficultOnly ? difficultQuestions : questions;
+    const displayQuestions = showDifficultOnly ? shuffledDifficultQuestions : currentQuestions;
 
     const updateQuestionsPerRow = () => {
         const width = window.innerWidth;
@@ -119,7 +147,7 @@ const KanjiDrill = () => {
             window.removeEventListener('resize', handleResize);
             clearTimeout(timeoutId);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const rows = [];
@@ -207,6 +235,16 @@ const KanjiDrill = () => {
                         className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
                     >
                         編集
+                    </button>
+                )}
+
+                {((selectedFileId && currentQuestions.length > 0) || (showDifficultOnly && difficultQuestions.length > 0)) && (
+                    <button
+                        onClick={handleShuffle}
+                        className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                        aria-label="シャッフル"
+                    >
+                        <HiOutlineSwitchHorizontal className="w-5 h-5" />
                     </button>
                 )}
 
