@@ -73,53 +73,23 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
         border border-gray-300 rounded
         overflow-auto
         tab-size-4
-        overscroll-contain
     `;
-
-    // iOS用の追加スタイル
-    const iosStyles = isMobile ? `
-        -webkit-overflow-scrolling: touch
-        momentum-scroll
-    ` : '';
 
     const preStyles = `
-        ${commonStyles}
-        ${iosStyles}
-        [&>div]:leading-[inherit]
-        [&>div]:min-h-[1.5em]
-        [&>div]:h-[1.5em]
-    `;
-
-    const textareaStyles = `
-        ${commonStyles}
-        ${iosStyles}
-        absolute inset-0 
-        bg-transparent 
-        text-transparent 
-        caret-black 
-        z-10 
-        resize-none
+    ${commonStyles}
+    [&>div]:leading-[inherit]
+    [&>div]:min-h-[1.5em]
+    [&>div]:h-[1.5em]
     `;
 
     return (
         <div className={`relative font-mono text-base ${editorHeight}`}>
-            <style>{`
-                .momentum-scroll {
-                    -webkit-overflow-scrolling: touch;
-                    overflow-y: scroll;
-                }
-                @supports (-webkit-touch-callout: none) {
-                    .momentum-scroll {
-                        overflow-y: auto;
-                    }
-                }
-            `}</style>
             <textarea
                 ref={editorRef}
                 value={value}
                 onChange={handleInput}
                 onScroll={handleScroll}
-                className={textareaStyles}
+                className={`${commonStyles} absolute inset-0 bg-transparent text-transparent caret-black z-10 resize-none`}
                 spellCheck={false}
             />
             <pre
