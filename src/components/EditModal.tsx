@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import filenameReserved from "filename-reserved-regex";
 import { CSVEditor } from './CSVEditor';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface EditModalProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
     const [editedContent, setEditedContent] = useState(content);
     const [editedFileName, setEditedFileName] = useState("");
     const [fileNameError, setFileNameError] = useState("");
+    const isMobile = useIsMobile();
 
     useEffect(() => {
         const resetState = () => {
@@ -27,7 +29,12 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
         };
         if (isOpen) {
             resetState();
+            document.body.style.overflow = 'hidden';
         }
+
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
     }, [isOpen, content, fileName, isNewFile]);
 
     const handleClose = () => {
@@ -69,12 +76,28 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
         onClose();
     };
 
+    const modalClasses = isMobile
+        ? "fixed inset-0 bg-white flex flex-col h-screen w-screen z-50"
+        : "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+
+    const contentClasses = isMobile
+        ? "flex flex-col h-full w-full"
+        : "bg-white p-6 rounded-lg w-full max-w-4xl mx-4 flex flex-col h-[80vh]";
+
+    const editorContainerClasses = isMobile
+        ? "flex-grow overflow-hidden"
+        : "flex-grow min-h-0";
+
+    const buttonContainerClasses = isMobile
+        ? "p-4 bg-white border-t border-gray-200"
+        : "flex justify-end gap-4 mt-4";
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-4xl mx-4 h-[90vh] flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">
-                        {isNewFile ? '新規ファイルを作成' : 'ファイルを編集'}
+        <div className={modalClasses}>
+            <div className={contentClasses}>
+                <div className="flex justify-between items-center py-2 px-4 border-b border-gray-200">
+                    <h2 className="text-base font-medium text-gray-600">
+                        {isNewFile ? '新規作成' : '編集'}
                     </h2>
                     <button
                         onClick={handleClose}
@@ -84,8 +107,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                     </button>
                 </div>
 
-                {/* ファイル名編集フィールド */}
-                <div className="mb-4">
+                <div className="px-4 pt-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         ファイル名
                     </label>
@@ -104,13 +126,14 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                     )}
                 </div>
 
-                <div className="flex-grow">
+                <div className={editorContainerClasses}>
                     <CSVEditor
                         value={editedContent}
                         onChange={setEditedContent}
                     />
                 </div>
-                <div className="flex justify-end gap-4">
+
+                <div className={buttonContainerClasses}>
                     {onDelete && (
                         <button
                             onClick={onDelete}

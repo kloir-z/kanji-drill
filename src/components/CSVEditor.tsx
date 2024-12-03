@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface CSVEditorProps {
     value: string;
@@ -9,6 +10,7 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
     const editorRef = useRef<HTMLTextAreaElement>(null);
     const preRef = useRef<HTMLPreElement>(null);
     const [highlightedContent, setHighlightedContent] = useState<string>('');
+    const isMobile = useIsMobile();
 
     const processContent = (content: string) => {
         const lines = content.split('\n').map((line, lineIndex) => {
@@ -62,8 +64,10 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
         }
     };
 
+    const editorHeight = isMobile ? 'h-full' : 'h-[calc(100%)]';
+
     const commonStyles = `
-        w-full h-full p-4 
+        w-full ${editorHeight} p-4 
         font-mono text-base leading-normal
         whitespace-pre-wrap break-all
         border border-gray-300 rounded
@@ -74,11 +78,12 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
     const preStyles = `
     ${commonStyles}
     [&>div]:leading-[inherit]
-    [&>div]:min-h-[1.2em]
+    [&>div]:min-h-[1.5em]
+    [&>div]:h-[1.5em]
     `;
 
     return (
-        <div className="relative font-mono text-base h-[400px]">
+        <div className={`relative font-mono text-base ${editorHeight}`}>
             <textarea
                 ref={editorRef}
                 value={value}
