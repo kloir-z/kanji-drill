@@ -1,103 +1,177 @@
-import { useEffect, useRef, useState } from 'react';
-import { useIsMobile } from '../hooks/useIsMobile';
+import { useEffect, useState } from 'react';
+import Papa from 'papaparse';
 
 interface CSVEditorProps {
     value: string;
     onChange: (value: string) => void;
 }
 
+interface Row {
+    text: string;
+    question: string;
+    reading: string;
+    isReading: boolean;
+}
+
+interface CSVRow {
+    text: string;
+    question: string;
+    reading: string;
+    isReading?: string;
+}
+
 export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
-    const editorRef = useRef<HTMLTextAreaElement>(null);
-    const preRef = useRef<HTMLPreElement>(null);
-    const [highlightedContent, setHighlightedContent] = useState<string>('');
-    const isMobile = useIsMobile();
-
-    const processContent = (content: string) => {
-        const lines = content.split('\n').map((line, lineIndex) => {
-            const cells = line.split(/([,])/);
-            const processedLine = cells.map((cell, cellIndex) => {
-                if (cell === ',') {
-                    return cell;
-                }
-
-                let className = '';
-                if (lineIndex === 0) {
-                    className = 'font-bold';
-                }
-                const colorIndex = Math.floor(cellIndex / 2) % 3;
-                switch (colorIndex) {
-                    case 0:
-                        className += ' text-blue-600';
-                        break;
-                    case 1:
-                        className += ' text-red-600';
-                        break;
-                    case 2:
-                        className += ' text-green-600';
-                        break;
-                }
-                return `<span class="${className}">${cell}</span>`;
-            }).join('');
-
-            return `<div>${processedLine}</div>`;
-        });
-
-        return lines.join('');
-    };
+    const [rows, setRows] = useState<Row[]>([]);
 
     useEffect(() => {
-        setHighlightedContent(processContent(value));
+        const parseResult = Papa.parse<CSVRow>(value, {
+            header: true,
+            skipEmptyLines: true
+        });
+
+        const initialRows = parseResult.data.map(row => ({
+            text: row.text || '',
+            question: row.question || '',
+            reading: row.reading || '',
+            isReading: row.isReading === '1'
+        }));
+
+        if (initialRows.length === 0) {
+            initialRows.push({ text: '', question: '', reading: '', isReading: false });
+        }
+
+        setRows(initialRows);
     }, [value]);
 
-    const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newValue = e.target.value;
-        onChange(newValue);
+    const handleRowUpdate = (index: number, field: keyof Row, newValue: string | boolean) => {
+        const newRows = rows.map((row, i) => {
+            if (i === index) {
+                return { ...row, [field]: newValue };
+            }
+            return row;
+        });
+
+        setRows(newRows);
+
+        const csvData = newRows.map(row => ({
+            text: row.text,
+            question: row.question,
+            reading: row.reading,
+            isReading: row.isReading ? '1' : '0'
+        }));
+
+        const csv = Papa.unparse(csvData, {
+            header: true,
+            columns: ['text', 'question', 'reading', 'isReading']
+        });
+
+        onChange(csv);
     };
 
-    const handleScroll = (e: React.UIEvent<HTMLElement>) => {
-        const source = e.currentTarget;
-        const target = source === editorRef.current ? preRef.current : editorRef.current;
+    const addRow = () => {
+        const newRows = [...rows, { text: '', question: '', reading: '', isReading: false }];
+        setRows(newRows);
 
-        if (target && source) {
-            target.scrollTop = source.scrollTop;
-            target.scrollLeft = source.scrollLeft;
+        const csvData = newRows.map(row => ({
+            text: row.text,
+            question: row.question,
+            reading: row.reading,
+            isReading: row.isReading ? '1' : '0'
+        }));
+
+        const csv = Papa.unparse(csvData, {
+            header: true,
+            columns: ['text', 'question', 'reading', 'isReading']
+        });
+
+        onChange(csv);
+    };
+
+    const removeRow = (index: number) => {
+        if (rows.length > 1) {
+            const newRows = rows.filter((_, i) => i !== index);
+            setRows(newRows);
+
+            const csvData = newRows.map(row => ({
+                text: row.text,
+                question: row.question,
+                reading: row.reading,
+                isReading: row.isReading ? '1' : '0'
+            }));
+
+            const csv = Papa.unparse(csvData, {
+                header: true,
+                columns: ['text', 'question', 'reading', 'isReading']
+            });
+
+            onChange(csv);
         }
     };
 
-    const editorHeight = isMobile ? 'h-full' : 'h-[calc(100%)]';
-
-    const commonStyles = `
-        w-full ${editorHeight} p-4 
-        font-mono text-base leading-normal
-        whitespace-pre-wrap break-all
-        border border-gray-300 rounded
-        overflow-auto
-        tab-size-4
-    `;
-
-    const preStyles = `
-    ${commonStyles}
-    [&>div]:leading-[inherit]
-    [&>div]:min-h-[1.5em]
-    [&>div]:h-[1.5em]
-    `;
-
     return (
-        <div className={`relative font-mono text-base ${editorHeight}`}>
-            <textarea
-                ref={editorRef}
-                value={value}
-                onChange={handleInput}
-                onScroll={handleScroll}
-                className={`${commonStyles} absolute inset-0 bg-transparent text-transparent caret-black z-10 resize-none`}
-                spellCheck={false}
-            />
-            <pre
-                ref={preRef}
-                onScroll={handleScroll}
-                className={preStyles}
-                dangerouslySetInnerHTML={{ __html: highlightedContent }}
-            />
+        <div className="flex flex-col h-full w-full">
+            <div className="min-w-[600px]">
+                <div className="flex mb-1 px-1 text-xs text-gray-600">
+                    <div className="w-[190px] px-1">本文</div>
+                    <div className="w-[120px] px-1">問題</div>
+                    <div className="w-[120px] px-1">読み方</div>
+                    <div className="w-12 text-center">読み</div>
+                    <div className="w-8"></div>
+                </div>
+                <div className="h-full">
+                    <div className="flex-1">
+                        {rows.map((row, index) => (
+                            <div key={index} className="flex mb-1 px-1 gap-1">
+                                <input
+                                    type="text"
+                                    value={row.text}
+                                    onChange={(e) => handleRowUpdate(index, 'text', e.target.value)}
+                                    className="w-[190px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                                    placeholder="本文"
+                                />
+                                <input
+                                    type="text"
+                                    value={row.question}
+                                    onChange={(e) => handleRowUpdate(index, 'question', e.target.value)}
+                                    className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                                    placeholder="問題"
+                                />
+                                <input
+                                    type="text"
+                                    value={row.reading}
+                                    onChange={(e) => handleRowUpdate(index, 'reading', e.target.value)}
+                                    className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                                    placeholder="読み方"
+                                />
+                                <div className="w-12 flex items-center justify-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={row.isReading}
+                                        onChange={(e) => handleRowUpdate(index, 'isReading', e.target.checked)}
+                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => removeRow(index)}
+                                    className="w-8 text-red-500 hover:text-red-700 focus:outline-none text-center"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            <div className="mt-2 px-1">
+                <button
+                    onClick={addRow}
+                    className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 focus:outline-none"
+                >
+                    + 行を追加
+                </button>
+            </div>
         </div>
     );
 };
+
+export default CSVEditor;

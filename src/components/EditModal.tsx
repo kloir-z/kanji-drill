@@ -81,12 +81,12 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
         : "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
 
     const contentClasses = isMobile
-        ? "flex flex-col h-[100dvh]"
+        ? "flex flex-col h-[100dvh] overflow-hidden"
         : "bg-white p-6 rounded-lg w-full max-w-4xl mx-4 flex flex-col h-[80vh]";
 
     const editorContainerClasses = isMobile
-        ? "flex-grow overflow-hidden"
-        : "flex-grow min-h-0";
+        ? "flex-grow overflow-x-auto overflow-y-auto"
+        : "flex-grow min-h-0 overflow-auto";
 
     const buttonContainerClasses = isMobile
         ? "p-4 bg-white border-t border-gray-200 pb-8"
@@ -95,7 +95,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
     return (
         <div className={modalClasses}>
             <div className={contentClasses}>
-                <div className="flex justify-between items-center py-2 px-4 border-b border-gray-200">
+                <div className="flex justify-between items-center py-1 px-4 border-b border-gray-200">
                     <h2 className="text-base font-medium text-gray-600">
                         {isNewFile ? '新規作成' : '編集'}
                     </h2>
@@ -107,7 +107,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                     </button>
                 </div>
 
-                <div className="px-4 pt-3">
+                <div className="px-2 pt-1 mb-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         ファイル名
                     </label>
@@ -116,7 +116,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                             type="text"
                             value={editedFileName}
                             onChange={handleFileNameChange}
-                            className="flex-grow p-2 border border-gray-300 rounded"
+                            className="flex-grow p-1 border border-gray-300 rounded"
                             placeholder="ファイル名を入力"
                         />
                         <span className="text-gray-500">.csv</span>
