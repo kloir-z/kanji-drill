@@ -3,9 +3,16 @@ import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
 import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
 import { StoredCSVFile, Question } from '../types';
-import { HiPlus, HiOutlineSwitchHorizontal } from 'react-icons/hi';
+import { HiPlus, HiOutlineSwitchHorizontal, HiRefresh, HiPencil } from 'react-icons/hi';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { EditModal } from './EditModal';
+
+const SHUFFLE_STATE_KEY = 'question_shuffle_state';
+const DIFFICULT_SHUFFLE_STATE_KEY = 'difficult_question_shuffle_state';
+
+interface ShuffleState {
+    [fileId: string]: number[];
+}
 
 const KanjiDrill = () => {
     const {
@@ -36,10 +43,90 @@ const KanjiDrill = () => {
     const [isNewFile, setIsNewFile] = useState(false);
     const [currentQuestions, setCurrentQuestions] = useState<Question[]>([]);
     const [shuffledDifficultQuestions, setShuffledDifficultQuestions] = useState<Question[]>([]);
+    const [shuffleStates, setShuffleStates] = useState<ShuffleState>(() => {
+        const stored = localStorage.getItem(SHUFFLE_STATE_KEY);
+        return stored ? JSON.parse(stored) : {};
+    });
+    const [difficultShuffleState, setDifficultShuffleState] = useState<number[]>(() => {
+        const stored = localStorage.getItem(DIFFICULT_SHUFFLE_STATE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    });
 
     useEffect(() => {
-        setCurrentQuestions(questions);
-    }, [questions]);
+        if (selectedFileId && questions.length > 0) {
+            const savedState = shuffleStates[selectedFileId];
+            if (savedState && savedState.length === questions.length) {
+                const orderedQuestions = savedState.map(index => questions[index]);
+                setCurrentQuestions(orderedQuestions);
+            } else {
+                setCurrentQuestions(questions);
+            }
+        } else {
+            setCurrentQuestions(questions);
+        }
+    }, [questions, selectedFileId, shuffleStates]);
+
+    useEffect(() => {
+        if (difficultQuestions.length > 0) {
+            if (difficultShuffleState.length === difficultQuestions.length) {
+                const orderedQuestions = difficultShuffleState.map(index => difficultQuestions[index]);
+                setShuffledDifficultQuestions(orderedQuestions);
+            } else {
+                setShuffledDifficultQuestions(difficultQuestions);
+            }
+        } else {
+            setShuffledDifficultQuestions([]);
+        }
+    }, [difficultQuestions, difficultShuffleState]);
+
+    const saveShuffleState = (fileId: string, indices: number[]) => {
+        const newStates = { ...shuffleStates, [fileId]: indices };
+        setShuffleStates(newStates);
+        localStorage.setItem(SHUFFLE_STATE_KEY, JSON.stringify(newStates));
+    };
+
+    const saveDifficultShuffleState = (indices: number[]) => {
+        setDifficultShuffleState(indices);
+        localStorage.setItem(DIFFICULT_SHUFFLE_STATE_KEY, JSON.stringify(indices));
+    };
+
+    const handleShuffle = () => {
+        if (showDifficultOnly) {
+            const indices = Array.from({ length: difficultQuestions.length }, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            const shuffled = indices.map(i => difficultQuestions[i]);
+            setShuffledDifficultQuestions(shuffled);
+            saveDifficultShuffleState(indices);
+        } else if (selectedFileId) {
+            const indices = Array.from({ length: questions.length }, (_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            const shuffled = indices.map(i => questions[i]);
+            setCurrentQuestions(shuffled);
+            saveShuffleState(selectedFileId, indices);
+        }
+        setResetKey(prev => prev + 1);
+    };
+
+    const handleResetOrder = () => {
+        if (showDifficultOnly) {
+            setShuffledDifficultQuestions([...difficultQuestions]);
+            setDifficultShuffleState([]);
+            localStorage.removeItem(DIFFICULT_SHUFFLE_STATE_KEY);
+        } else if (selectedFileId) {
+            setCurrentQuestions([...questions]);
+            const newStates = { ...shuffleStates };
+            delete newStates[selectedFileId];
+            setShuffleStates(newStates);
+            localStorage.setItem(SHUFFLE_STATE_KEY, JSON.stringify(newStates));
+        }
+        setResetKey(prev => prev + 1);
+    };
 
     useEffect(() => {
         setShuffledDifficultQuestions(difficultQuestions);
@@ -48,24 +135,6 @@ const KanjiDrill = () => {
     const handleEditClick = () => {
         setIsNewFile(false);
         setIsEditModalOpen(true);
-    };
-
-    const shuffleArray = <T,>(array: T[]): T[] => {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    };
-
-    const handleShuffle = () => {
-        if (showDifficultOnly) {
-            setShuffledDifficultQuestions(prev => shuffleArray(prev));
-        } else {
-            setCurrentQuestions(prev => shuffleArray(prev));
-        }
-        setResetKey(prev => prev + 1);
     };
 
     const handleSave = (content: string, newFileName: string) => {
@@ -147,7 +216,7 @@ const KanjiDrill = () => {
             window.removeEventListener('resize', handleResize);
             clearTimeout(timeoutId);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const rows = [];
@@ -233,19 +302,29 @@ const KanjiDrill = () => {
                     <button
                         onClick={handleEditClick}
                         className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
+                        aria-label="編集"
                     >
-                        編集
+                        <HiPencil className="w-5 h-5" />
                     </button>
                 )}
 
                 {((selectedFileId && currentQuestions.length > 0) || (showDifficultOnly && difficultQuestions.length > 0)) && (
-                    <button
-                        onClick={handleShuffle}
-                        className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
-                        aria-label="シャッフル"
-                    >
-                        <HiOutlineSwitchHorizontal className="w-5 h-5" />
-                    </button>
+                    <>
+                        <button
+                            onClick={handleShuffle}
+                            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                            aria-label="シャッフル"
+                        >
+                            <HiOutlineSwitchHorizontal className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={handleResetOrder}
+                            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                            aria-label="元の順序に戻す"
+                        >
+                            <HiRefresh className="w-5 h-5" />
+                        </button>
+                    </>
                 )}
 
                 <EditModal
