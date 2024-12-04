@@ -192,7 +192,7 @@ const CSVEditor = ({ value, onChange, containerRef, onScrollRequest }: CSVEditor
                         </div>
                         <button
                             onClick={() => removeRow(index)}
-                            className="w-8 text-red-500 hover:text-red-700 focus:outline-none text-center"
+                            className="w-8 mr-4 text-red-500 hover:text-red-700 focus:outline-none text-center"
                         >
                             ×
                         </button>
@@ -200,7 +200,7 @@ const CSVEditor = ({ value, onChange, containerRef, onScrollRequest }: CSVEditor
                 ))}
             </div>
 
-            <div className="absolute bottom-8 left-0 right-0 py-2">
+            <div className="absolute bottom-8 left-0 right-0 py-2 w-24">
                 <button
                     onClick={addRow}
                     className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 focus:outline-none"
