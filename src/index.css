@@ -19,7 +19,6 @@ body {
 
 .ruby-text {
   font-size: 0.7em;
-  color: #666;
   white-space: nowrap;
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -48,19 +47,12 @@ body {
   align-items: flex-start;
 }
 
-.ruby-text {
-  font-size: 0.7em;
-  color: black;
-  white-space: nowrap;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-}
-
 .kanji-box:first-child {
   margin-top: 6px;
 }
 
-.kanji-box, .writing-vertical {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+.kanji-box,
+.writing-vertical {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

@@ -5,6 +5,13 @@ import { detectEncoding } from '../utils/encoding';
 
 const STORAGE_KEY = 'stored_csv_files';
 
+interface CSVRow {
+    text: string;
+    question: string;
+    reading: string;
+    isReading?: string;
+}
+
 interface CSVProcessorResult {
     questions: Question[];
     errors: ParseError[];
@@ -42,11 +49,11 @@ export const useCSVProcessor = (): CSVProcessorResult => {
     };
 
     const processCSVContent = useCallback((content: string) => {
-        Papa.parse(content, {
+        Papa.parse<CSVRow>(content, {
             header: true,
             skipEmptyLines: true,
             delimiter: ',',
-            complete(results: ParseResult<Partial<Question>>) {
+            complete(results: ParseResult<CSVRow>) {
                 const newQuestions: Question[] = [];
                 const newErrors: ParseError[] = [];
 
@@ -59,7 +66,8 @@ export const useCSVProcessor = (): CSVProcessorResult => {
                         newQuestions.push({
                             text: row.text,
                             question: row.question,
-                            reading: row.reading
+                            reading: row.reading,
+                            isReading: row.isReading === '1'
                         });
                     } catch (error) {
                         newErrors.push({

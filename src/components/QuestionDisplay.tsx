@@ -12,9 +12,12 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
     const [isAnswerShown, setIsAnswerShown] = useState(false);
     const parts = question.text.split(question.question);
     const kanjiOnly = /^[\u4E00-\u9FFF]+$/;
-    // eslint-disable-next-line no-irregular-whitespace
-    const readingText = `　${question.reading}`;
     const isKanjiOnly = kanjiOnly.test(question.question);
+
+    const readingText = question.isReading
+        ? question.reading
+        // eslint-disable-next-line no-irregular-whitespace
+        : `　${question.reading}`;
 
     const toggleAnswer = () => {
         setIsAnswerShown(!isAnswerShown);
@@ -65,27 +68,47 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                 {partIndex < array.length - 1 && (
                                     <div className="relative inline-block">
                                         <span className="inline-block relative">
-                                            <span className={`text-4xl mx-auto flex ${!isKanjiOnly ? 'border border-gray-600  bg-white px-5 py-9 min-h-[144px] items-center mt-2' : ''}`}>
-                                                {isKanjiOnly ? (
-                                                    Array.from(question.question).map((char, idx) => (
-                                                        <span key={idx} className="kanji-box bg-white flex items-center justify-center">
-                                                            {isAnswerShown ? (
-                                                                <span className="text-red-600">{char}</span>
-                                                            ) : (
-                                                                // eslint-disable-next-line no-irregular-whitespace
-                                                                <span>　</span>
-                                                            )}
-                                                        </span>
-                                                    ))
-                                                ) : (
-                                                    <span className={`writing-vertical tracking-[0.22em] ${isAnswerShown ? 'text-red-600' : ''}`}>
-                                                        {isAnswerShown ? question.question : Array(question.question.length).fill('　').join('')}
+                                            {question.isReading ? (
+                                                // 読み方を答える問題の場合
+                                                <span className="inline-block relative">
+                                                    <span className="text-2xl border-r-2 border-gray-400 pr-1">
+                                                        {question.question}
                                                     </span>
-                                                )}
-                                            </span>
-                                            <span className="absolute top-0 -right-7 text-sm ruby-text">
-                                                {readingText}
-                                            </span>
+                                                    <span
+                                                        className={`absolute top-0 -right-7 text-sm ruby-text ${!isAnswerShown
+                                                                ? 'invisible'
+                                                                : 'text-red-600'
+                                                            }`}
+                                                    >
+                                                        {readingText}
+                                                    </span>
+                                                </span>
+                                            ) : (
+                                                // 漢字を答える問題の場合
+                                                <span className={`text-4xl mx-auto flex ${!isKanjiOnly ? 'border border-gray-600 bg-white px-5 py-9 min-h-[144px] items-center mt-2' : ''}`}>
+                                                    {isKanjiOnly ? (
+                                                        Array.from(question.question).map((char, idx) => (
+                                                            <span key={idx} className="kanji-box bg-white flex items-center justify-center">
+                                                                {isAnswerShown ? (
+                                                                    <span className="text-red-600">{char}</span>
+                                                                ) : (
+                                                                    // eslint-disable-next-line no-irregular-whitespace
+                                                                    <span>　</span>
+                                                                )}
+                                                            </span>
+                                                        ))
+                                                    ) : (
+                                                        <span className={`writing-vertical tracking-[0.22em] ${isAnswerShown ? 'text-red-600' : ''}`}>
+                                                            {isAnswerShown ? question.question : Array(question.question.length).fill('　').join('')}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            )}
+                                            {!question.isReading && (
+                                                <span className="absolute top-0 -right-7 text-sm ruby-text">
+                                                    {readingText}
+                                                </span>
+                                            )}
                                         </span>
                                     </div>
                                 )}

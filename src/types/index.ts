@@ -2,6 +2,7 @@ export interface Question {
     text: string;
     question: string;
     reading: string;
+    isReading?: boolean;
 }
 
 export type ParseError = {
