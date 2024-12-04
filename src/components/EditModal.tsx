@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import filenameReserved from "filename-reserved-regex";
-import { CSVEditor } from './CSVEditor';
+import CSVEditor from './CSVEditor';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 interface EditModalProps {
@@ -18,6 +18,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
     const [editedFileName, setEditedFileName] = useState("");
     const [fileNameError, setFileNameError] = useState("");
     const isMobile = useIsMobile();
+    const modalContentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const resetState = () => {
@@ -41,6 +42,24 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
         setFileNameError("");
         onClose();
     };
+
+    const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        const target = e.currentTarget;
+        if (target.scrollHeight - target.scrollTop === target.clientHeight) {
+            console.log('Reached bottom');
+        }
+    }, []);
+
+    const handleScrollRequest = useCallback(() => {
+        if (modalContentRef.current) {
+            requestAnimationFrame(() => {
+                modalContentRef.current?.scrollTo({
+                    top: modalContentRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            });
+        }
+    }, []);
 
     if (!isOpen) return null;
 
@@ -77,25 +96,17 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
     };
 
     const modalClasses = isMobile
-        ? "fixed inset-0 bg-white z-50 flex flex-col"
-        : "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+        ? "fixed inset-0 bg-white z-50 flex flex-col overflow-hidden"
+        : "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-hidden";
 
     const contentClasses = isMobile
-        ? "flex flex-col h-[100dvh] overflow-hidden"
-        : "bg-white p-6 rounded-lg w-full max-w-4xl mx-4 flex flex-col h-[80vh]";
-
-    const editorContainerClasses = isMobile
-        ? "flex-grow overflow-x-auto overflow-y-auto"
-        : "flex-grow min-h-0 overflow-auto";
-
-    const buttonContainerClasses = isMobile
-        ? "p-4 bg-white border-t border-gray-200 pb-8"
-        : "flex justify-end gap-4 mt-4";
+        ? "relative flex flex-col h-full overflow-hidden"
+        : "relative bg-white rounded-lg w-full max-w-4xl mx-4 flex flex-col h-[80vh] overflow-hidden";
 
     return (
         <div className={modalClasses}>
             <div className={contentClasses}>
-                <div className="flex justify-between items-center py-1 px-4 border-b border-gray-200">
+                <div className="flex-shrink-0 flex justify-between items-center py-1 px-4 border-b border-gray-200">
                     <h2 className="text-base font-medium text-gray-600">
                         {isNewFile ? '新規作成' : '編集'}
                     </h2>
@@ -107,7 +118,7 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                     </button>
                 </div>
 
-                <div className="px-2 pt-1 mb-1">
+                <div className="flex-shrink-0 px-4 pt-2 pb-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         ファイル名
                     </label>
@@ -126,14 +137,21 @@ export const EditModal = ({ isOpen, content, fileName, onSave, onDelete, onClose
                     )}
                 </div>
 
-                <div className={editorContainerClasses}>
+                <div
+                    ref={modalContentRef}
+                    className="flex-grow min-h-0 px-4 overflow-y-auto"
+                    onScroll={handleScroll}
+                >
                     <CSVEditor
                         value={editedContent}
                         onChange={setEditedContent}
+                        containerRef={modalContentRef}
+                        onScrollRequest={handleScrollRequest}
                     />
                 </div>
 
-                <div className={buttonContainerClasses}>
+                {/* フッター部分 */}
+                <div className="flex-shrink-0 flex justify-end gap-4 p-4 border-t border-gray-200">
                     {onDelete && (
                         <button
                             onClick={onDelete}

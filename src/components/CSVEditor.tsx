@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Papa from 'papaparse';
 
 interface CSVEditorProps {
     value: string;
     onChange: (value: string) => void;
+    containerRef: React.RefObject<HTMLDivElement>;
+    onScrollRequest?: () => void;
 }
 
 interface Row {
@@ -20,8 +22,9 @@ interface CSVRow {
     isReading?: string;
 }
 
-export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
+const CSVEditor = ({ value, onChange, containerRef, onScrollRequest }: CSVEditorProps) => {
     const [rows, setRows] = useState<Row[]>([]);
+    const scrollTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
         const parseResult = Papa.parse<CSVRow>(value, {
@@ -43,14 +46,36 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
         setRows(initialRows);
     }, [value]);
 
-    const handleRowUpdate = (index: number, field: keyof Row, newValue: string | boolean) => {
-        const newRows = rows.map((row, i) => {
-            if (i === index) {
-                return { ...row, [field]: newValue };
+    const scrollToBottom = () => {
+        if (onScrollRequest) {
+            onScrollRequest();
+        } else if (containerRef.current) {
+            if (scrollTimeoutRef.current) {
+                window.clearTimeout(scrollTimeoutRef.current);
             }
-            return row;
-        });
 
+            scrollTimeoutRef.current = window.setTimeout(() => {
+                const container = containerRef.current;
+                if (container) {
+                    container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 50);
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (scrollTimeoutRef.current) {
+                window.clearTimeout(scrollTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const addRow = () => {
+        const newRows = [...rows, { text: '', question: '', reading: '', isReading: false }];
         setRows(newRows);
 
         const csvData = newRows.map(row => ({
@@ -66,10 +91,25 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
         });
 
         onChange(csv);
+        scrollToBottom();
     };
 
-    const addRow = () => {
-        const newRows = [...rows, { text: '', question: '', reading: '', isReading: false }];
+    const handleRowUpdate = (index: number, field: keyof Row, newValue: string | boolean) => {
+        const newRows = rows.map((row, i) => {
+            if (i === index) {
+                return { ...row, [field]: newValue };
+            }
+            return row;
+        });
+
+        if (field === 'reading' &&
+            typeof newValue === 'string' &&
+            newValue !== '' &&
+            index === rows.length - 1) {
+            newRows.push({ text: '', question: '', reading: '', isReading: false });
+            scrollToBottom();
+        }
+
         setRows(newRows);
 
         const csvData = newRows.map(row => ({
@@ -109,60 +149,58 @@ export const CSVEditor = ({ value, onChange }: CSVEditorProps) => {
     };
 
     return (
-        <div className="flex flex-col h-full w-full">
-            <div className="min-w-[600px]">
-                <div className="flex mb-1 px-1 text-xs text-gray-600">
-                    <div className="w-[190px] px-1">本文</div>
-                    <div className="w-[120px] px-1">問題</div>
-                    <div className="w-[120px] px-1">読み方</div>
-                    <div className="w-12 text-center">読み</div>
-                    <div className="w-8"></div>
-                </div>
-                <div className="h-full">
-                    <div className="flex-1">
-                        {rows.map((row, index) => (
-                            <div key={index} className="flex mb-1 px-1 gap-1">
-                                <input
-                                    type="text"
-                                    value={row.text}
-                                    onChange={(e) => handleRowUpdate(index, 'text', e.target.value)}
-                                    className="w-[190px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
-                                    placeholder="本文"
-                                />
-                                <input
-                                    type="text"
-                                    value={row.question}
-                                    onChange={(e) => handleRowUpdate(index, 'question', e.target.value)}
-                                    className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
-                                    placeholder="問題"
-                                />
-                                <input
-                                    type="text"
-                                    value={row.reading}
-                                    onChange={(e) => handleRowUpdate(index, 'reading', e.target.value)}
-                                    className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
-                                    placeholder="読み方"
-                                />
-                                <div className="w-12 flex items-center justify-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={row.isReading}
-                                        onChange={(e) => handleRowUpdate(index, 'isReading', e.target.checked)}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => removeRow(index)}
-                                    className="w-8 text-red-500 hover:text-red-700 focus:outline-none text-center"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+        <div className="h-full flex flex-col">
+            <div className="flex-shrink-0 flex mb-1 text-xs text-gray-600">
+                <div className="w-[190px] px-1">本文</div>
+                <div className="w-[120px] px-1">問題</div>
+                <div className="w-[120px] px-1">読み方</div>
+                <div className="w-8 text-center">読</div>
+                <div className="w-8"></div>
             </div>
-            <div className="mt-2 px-1">
+
+            <div className="min-h-0">
+                {rows.map((row, index) => (
+                    <div key={index} className="flex mb-1 gap-1">
+                        <input
+                            type="text"
+                            value={row.text}
+                            onChange={(e) => handleRowUpdate(index, 'text', e.target.value)}
+                            className="w-[190px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                            placeholder="本文"
+                        />
+                        <input
+                            type="text"
+                            value={row.question}
+                            onChange={(e) => handleRowUpdate(index, 'question', e.target.value)}
+                            className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                            placeholder="問題"
+                        />
+                        <input
+                            type="text"
+                            value={row.reading}
+                            onChange={(e) => handleRowUpdate(index, 'reading', e.target.value)}
+                            className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                            placeholder="読み方"
+                        />
+                        <div className="w-8 flex items-center justify-center">
+                            <input
+                                type="checkbox"
+                                checked={row.isReading}
+                                onChange={(e) => handleRowUpdate(index, 'isReading', e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                        </div>
+                        <button
+                            onClick={() => removeRow(index)}
+                            className="w-8 text-red-500 hover:text-red-700 focus:outline-none text-center"
+                        >
+                            ×
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            <div className="absolute bottom-8 left-0 right-0 py-2">
                 <button
                     onClick={addRow}
                     className="px-2 py-1 text-xs text-blue-600 hover:text-blue-800 focus:outline-none"
