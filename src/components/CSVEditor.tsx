@@ -151,35 +151,35 @@ const CSVEditor = ({ value, onChange, containerRef, onScrollRequest }: CSVEditor
     return (
         <div className="h-full flex flex-col">
             <div className="flex-shrink-0 flex mb-1 text-xs text-gray-600">
-                <div className="w-[190px] px-1">本文</div>
+                <div className="w-[175px] px-1">本文</div>
                 <div className="w-[120px] px-1">問題</div>
                 <div className="w-[120px] px-1">読み方</div>
                 <div className="w-8 text-center">読</div>
                 <div className="w-8"></div>
             </div>
 
-            <div className="min-h-0">
+            <div className="h-auto pb-8">
                 {rows.map((row, index) => (
-                    <div key={index} className="flex mb-1 gap-1">
+                    <div key={index} className="flex gap-1">
                         <input
                             type="text"
                             value={row.text}
                             onChange={(e) => handleRowUpdate(index, 'text', e.target.value)}
-                            className="w-[190px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                            className="w-[175px] p-1 text-base border-b border-gray-300 focus:border-blue-500 focus:outline-none"
                             placeholder="本文"
                         />
                         <input
                             type="text"
                             value={row.question}
                             onChange={(e) => handleRowUpdate(index, 'question', e.target.value)}
-                            className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                            className="w-[120px] p-1 text-base border-b border-gray-300 focus:border-blue-500 focus:outline-none"
                             placeholder="問題"
                         />
                         <input
                             type="text"
                             value={row.reading}
                             onChange={(e) => handleRowUpdate(index, 'reading', e.target.value)}
-                            className="w-[120px] p-1 text-sm border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                            className="w-[120px] p-1 text-base border-b border-gray-300 focus:border-blue-500 focus:outline-none"
                             placeholder="読み方"
                         />
                         <div className="w-8 flex items-center justify-center">
