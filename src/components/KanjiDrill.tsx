@@ -6,6 +6,7 @@ import { StoredCSVFile, Question } from '../types';
 import { HiPlus, HiOutlineSwitchHorizontal, HiRefresh, HiPencil } from 'react-icons/hi';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { EditModal } from './EditModal';
+import DownloadButton from './DownloadButton';
 
 const SHUFFLE_STATE_KEY = 'question_shuffle_state';
 const DIFFICULT_SHUFFLE_STATE_KEY = 'difficult_question_shuffle_state';
@@ -299,13 +300,20 @@ const KanjiDrill = () => {
                 )}
 
                 {selectedFileId && !showDifficultOnly && (
-                    <button
-                        onClick={handleEditClick}
-                        className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
-                        aria-label="編集"
-                    >
-                        <HiPencil className="w-5 h-5" />
-                    </button>
+                    <>
+                        <button
+                            onClick={handleEditClick}
+                            className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
+                            aria-label="編集"
+                        >
+                            <HiPencil className="w-5 h-5" />
+                        </button>
+                        <DownloadButton
+                            csvContent={storedFiles.find(f => f.id === selectedFileId)?.content || ''}
+                            fileName={storedFiles.find(f => f.id === selectedFileId)?.name || 'export.csv'}
+                            disabled={!selectedFileId}
+                        />
+                    </>
                 )}
 
                 {((selectedFileId && currentQuestions.length > 0) || (showDifficultOnly && difficultQuestions.length > 0)) && (
