@@ -59,6 +59,12 @@ export const useCSVProcessor = (): CSVProcessorResult => {
 
                 results.data.forEach((row, index) => {
                     try {
+                        if (index === results.data.length - 1 &&
+                            !row.text && !row.question && !row.reading &&
+                            row.isReading === '0') {
+                            return;
+                        }
+
                         if (!row.text || !row.question || !row.reading) {
                             throw new Error(`必要なフィールドが不足しています (text: ${row.text}, kanji: ${row.question}, reading: ${row.reading})`);
                         }
@@ -88,6 +94,7 @@ export const useCSVProcessor = (): CSVProcessorResult => {
             }
         });
     }, []);
+
 
     const processCSV = async (file: File) => {
         try {

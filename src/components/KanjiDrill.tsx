@@ -269,70 +269,78 @@ const KanjiDrill = () => {
 
     return (
         <div className="p-2">
-            <div className="mb-4 flex items-center gap-2">
-                <select
-                    onChange={handleMenuSelect}
-                    className="block w-54 p-2 border border-gray-300 rounded"
-                    value={selectedMenu}
-                >
-                    <option value="" disabled={menuOptionDisabled}>メニュー</option>
-                    <option value="create-new">新規作成...</option>
-                    <option value="new-file">新しく読み込み...</option>
-                    <option value="difficult-only">苦手な問題のみ表示</option>
-                    {storedFiles.length > 0 && (
-                        <optgroup label="保存済みファイル">
-                            {storedFiles.map((file: StoredCSVFile) => (
-                                <option key={file.id} value={file.id}>
-                                    {file.name}
-                                </option>
-                            ))}
-                        </optgroup>
-                    )}
-                </select>
-
-                {showFileButton && isMobile && (
-                    <button
-                        onClick={handleFileButtonClick}
-                        className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+            <div className="mb-4 flex flex-col gap-2">
+                {/* メニュー行 */}
+                <div className="flex items-center gap-2">
+                    <select
+                        onChange={handleMenuSelect}
+                        className="block w-54 p-2 border border-gray-300 rounded"
+                        value={selectedMenu}
                     >
-                        <HiPlus className="w-5 h-5" />
-                    </button>
-                )}
+                        <option value="" disabled={menuOptionDisabled}>メニュー</option>
+                        <option value="create-new">新規作成...</option>
+                        <option value="new-file">新しく読み込み...</option>
+                        <option value="difficult-only">苦手な問題のみ表示</option>
+                        {storedFiles.length > 0 && (
+                            <optgroup label="保存済みファイル">
+                                {storedFiles.map((file: StoredCSVFile) => (
+                                    <option key={file.id} value={file.id}>
+                                        {file.name}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        )}
+                    </select>
 
-                {selectedFileId && !showDifficultOnly && (
-                    <>
+                    {showFileButton && isMobile && (
                         <button
-                            onClick={handleEditClick}
-                            className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
-                            aria-label="編集"
+                            onClick={handleFileButtonClick}
+                            className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
                         >
-                            <HiPencil className="w-5 h-5" />
+                            <HiPlus className="w-5 h-5" />
                         </button>
-                        <DownloadButton
-                            csvContent={storedFiles.find(f => f.id === selectedFileId)?.content || ''}
-                            fileName={storedFiles.find(f => f.id === selectedFileId)?.name || 'export.csv'}
-                            disabled={!selectedFileId}
-                        />
-                    </>
-                )}
+                    )}
+                </div>
 
-                {((selectedFileId && currentQuestions.length > 0) || (showDifficultOnly && difficultQuestions.length > 0)) && (
-                    <>
-                        <button
-                            onClick={handleShuffle}
-                            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
-                            aria-label="シャッフル"
-                        >
-                            <HiOutlineSwitchHorizontal className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={handleResetOrder}
-                            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
-                            aria-label="元の順序に戻す"
-                        >
-                            <HiRefresh className="w-5 h-5" />
-                        </button>
-                    </>
+                {/* ボタン行 */}
+                {(selectedFileId || showDifficultOnly) && (
+                    <div className="flex items-center gap-2">
+                        {selectedFileId && !showDifficultOnly && (
+                            <>
+                                <button
+                                    onClick={handleEditClick}
+                                    className="px-3 py-2 text-sm text-blue-600 hover:text-blue-800"
+                                    aria-label="編集"
+                                >
+                                    <HiPencil className="w-5 h-5" />
+                                </button>
+                                <DownloadButton
+                                    csvContent={storedFiles.find(f => f.id === selectedFileId)?.content || ''}
+                                    fileName={storedFiles.find(f => f.id === selectedFileId)?.name || 'export.csv'}
+                                    disabled={!selectedFileId}
+                                />
+                            </>
+                        )}
+
+                        {((selectedFileId && currentQuestions.length > 0) || (showDifficultOnly && difficultQuestions.length > 0)) && (
+                            <>
+                                <button
+                                    onClick={handleShuffle}
+                                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                                    aria-label="シャッフル"
+                                >
+                                    <HiOutlineSwitchHorizontal className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={handleResetOrder}
+                                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                                    aria-label="元の順序に戻す"
+                                >
+                                    <HiRefresh className="w-5 h-5" />
+                                </button>
+                            </>
+                        )}
+                    </div>
                 )}
 
                 <EditModal
