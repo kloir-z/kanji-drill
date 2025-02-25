@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Question } from '../types';
 
 interface QuestionDisplayProps {
@@ -6,10 +5,18 @@ interface QuestionDisplayProps {
     isDifficult: boolean;
     onMarkDifficult: (question: Question) => void;
     onMarkMastered: (question: Question) => void;
+    isAnswerShown: boolean;
+    onToggleAnswer: (question: Question, isShown: boolean) => void;
 }
 
-export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMarkMastered }: QuestionDisplayProps) => {
-    const [isAnswerShown, setIsAnswerShown] = useState(false);
+export const QuestionDisplay = ({
+    question,
+    isDifficult,
+    onMarkDifficult,
+    onMarkMastered,
+    isAnswerShown,
+    onToggleAnswer
+}: QuestionDisplayProps) => {
     const parts = question.text.split(question.question);
     const kanjiOnly = /^[\u4E00-\u9FFF]+$/;
     const isKanjiOnly = kanjiOnly.test(question.question);
@@ -20,7 +27,7 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
         : `　${question.reading}`;
 
     const toggleAnswer = () => {
-        setIsAnswerShown(!isAnswerShown);
+        onToggleAnswer(question, !isAnswerShown);
     };
 
     return (
@@ -76,8 +83,8 @@ export const QuestionDisplay = ({ question, isDifficult, onMarkDifficult, onMark
                                                     </span>
                                                     <span
                                                         className={`absolute top-0 -right-7 text-sm ruby-text ${!isAnswerShown
-                                                                ? 'invisible'
-                                                                : 'text-red-600'
+                                                            ? 'invisible'
+                                                            : 'text-red-600'
                                                             }`}
                                                     >
                                                         {readingText}

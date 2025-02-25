@@ -21,3 +21,9 @@ export interface DifficultQuestion extends Question {
     id: string;
     timestamp: number;
 }
+
+export interface DifficultSlot {
+    id: string;
+    name: string;
+    questions: DifficultQuestion[];
+}

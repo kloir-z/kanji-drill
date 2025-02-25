@@ -139,7 +139,6 @@ export const useCSVProcessor = (): CSVProcessorResult => {
     const loadStoredFile = (id: string) => {
         const file = storedFiles.find(f => f.id === id);
         if (file) {
-            // 最終使用日時を更新
             const updatedFiles = storedFiles.map(f =>
                 f.id === id ? { ...f, lastUsed: Date.now() } : f
             );
@@ -161,7 +160,6 @@ export const useCSVProcessor = (): CSVProcessorResult => {
     const updateStoredFile = (id: string, content: string, newFileName: string) => {
         const updatedFiles = storedFiles.map(f => {
             if (f.id === id) {
-                // 既存の拡張子を保持
                 const extension = f.name.split('.').pop() || 'csv';
                 const newName = `${newFileName}.${extension}`;
                 return { ...f, content, name: newName, lastUsed: Date.now() };

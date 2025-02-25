@@ -2,11 +2,13 @@ import { ChangeEvent, useState, useEffect } from 'react';
 import { QuestionDisplay } from '../components/QuestionDisplay';
 import { useCSVProcessor } from '../hooks/useCSVProcessor';
 import { useDifficultQuestions } from '../hooks/useDifficultQuestions';
+import { useAppState, generateQuestionId } from '../hooks/useAppState';
 import { StoredCSVFile, Question } from '../types';
 import { HiPlus, HiOutlineSwitchHorizontal, HiRefresh, HiPencil } from 'react-icons/hi';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { EditModal } from './EditModal';
 import DownloadButton from './DownloadButton';
+import SlotSelector from './SlotSelector';
 
 const SHUFFLE_STATE_KEY = 'question_shuffle_state';
 const DIFFICULT_SHUFFLE_STATE_KEY = 'difficult_question_shuffle_state';
@@ -28,16 +30,31 @@ const KanjiDrill = () => {
     } = useCSVProcessor();
     const {
         difficultQuestions,
+        difficultSlots,
+        currentSlotId,
         isDifficult,
         addDifficultQuestion,
-        removeDifficultQuestion
+        removeDifficultQuestion,
+        setCurrentSlot,
+        clearSlot
     } = useDifficultQuestions();
+
+    const {
+        selectedFileId,
+        selectedMenu,
+        showDifficultOnly,
+        difficultSlotId,
+        isAnswerShown,
+        updateAnswerState,
+        updateFileSelection,
+        updateDifficultOnlyState,
+        updateCurrentSlot,
+        resetAppState
+    } = useAppState();
+
     const isMobile = useIsMobile();
     const [questionsPerRow, setQuestionsPerRow] = useState(5);
-    const [selectedFileId, setSelectedFileId] = useState<string>('');
-    const [showDifficultOnly, setShowDifficultOnly] = useState(false);
     const [menuOptionDisabled, setMenuOptionDisabled] = useState(false);
-    const [selectedMenu, setSelectedMenu] = useState<string>('');
     const [showFileButton, setShowFileButton] = useState(false);
     const [resetKey, setResetKey] = useState(0);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,6 +69,38 @@ const KanjiDrill = () => {
         const stored = localStorage.getItem(DIFFICULT_SHUFFLE_STATE_KEY);
         return stored ? JSON.parse(stored) : [];
     });
+
+    const handleMarkDifficultDirectly = (question: Question) => {
+        addDifficultQuestion(question, currentSlotId);
+    };
+
+    useEffect(() => {
+        if (showDifficultOnly) {
+            setMenuOptionDisabled(true);
+            setCurrentSlot(difficultSlotId);
+        } else if (selectedFileId) {
+            loadStoredFile(selectedFileId);
+            setMenuOptionDisabled(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                if (selectedFileId) {
+                    loadStoredFile(selectedFileId);
+                }
+                setResetKey(prev => prev + 1);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [selectedFileId, loadStoredFile]);
 
     useEffect(() => {
         if (selectedFileId && questions.length > 0) {
@@ -129,10 +178,6 @@ const KanjiDrill = () => {
         setResetKey(prev => prev + 1);
     };
 
-    useEffect(() => {
-        setShuffledDifficultQuestions(difficultQuestions);
-    }, [difficultQuestions]);
-
     const handleEditClick = () => {
         setIsNewFile(false);
         setIsEditModalOpen(true);
@@ -141,8 +186,7 @@ const KanjiDrill = () => {
     const handleSave = (content: string, newFileName: string) => {
         if (isNewFile) {
             const newId = createNewFile(content, newFileName);
-            setSelectedFileId(newId);
-            setSelectedMenu(newId);
+            updateFileSelection(newId, newId);
         } else {
             updateStoredFile(selectedFileId, content, newFileName);
         }
@@ -165,26 +209,26 @@ const KanjiDrill = () => {
             case 'create-new':
                 setIsNewFile(true);
                 setIsEditModalOpen(true);
-                setSelectedMenu(selectedMenu || '');
                 event.target.value = selectedMenu || '';
                 break;
             case 'difficult-only':
                 setShowFileButton(false);
-                setShowDifficultOnly(true);
-                setSelectedMenu('difficult-only');
+                updateDifficultOnlyState(true, currentSlotId);
                 break;
             case '':
                 setShowFileButton(false);
-                setSelectedFileId('');
-                setSelectedMenu('');
-                setShowDifficultOnly(false);
+                resetAppState();
                 break;
             default:
-                setShowFileButton(false);
-                setSelectedFileId(value);
-                setSelectedMenu(value);
-                loadStoredFile(value);
-                setShowDifficultOnly(false);
+                if (value.startsWith('slot-')) {
+                    setCurrentSlot(value);
+                    updateCurrentSlot(value);
+                    updateDifficultOnlyState(true, value);
+                } else {
+                    setShowFileButton(false);
+                    updateFileSelection(value, value);
+                    loadStoredFile(value);
+                }
                 break;
         }
     };
@@ -209,15 +253,11 @@ const KanjiDrill = () => {
         };
 
         window.addEventListener('resize', handleResize);
-        if (selectedFileId) {
-            loadStoredFile(selectedFileId);
-        }
 
         return () => {
             window.removeEventListener('resize', handleResize);
             clearTimeout(timeoutId);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const rows = [];
@@ -230,18 +270,16 @@ const KanjiDrill = () => {
         if (file) {
             const fileId = await processCSV(file);
             if (fileId) {
-                setSelectedFileId(fileId);
-                setSelectedMenu(fileId);
+                updateFileSelection(fileId, fileId);
                 setMenuOptionDisabled(true);
-                setShowDifficultOnly(false);
             }
         } else {
             if (showDifficultOnly) {
-                setSelectedMenu('difficult-only');
+                updateDifficultOnlyState(true, currentSlotId);
             } else if (selectedFileId) {
-                setSelectedMenu(selectedFileId);
+                updateFileSelection(selectedFileId, selectedFileId);
             } else {
-                setSelectedMenu('');
+                resetAppState();
                 setMenuOptionDisabled(false);
             }
         }
@@ -256,15 +294,17 @@ const KanjiDrill = () => {
             const fileName = selectedFile?.name || 'このファイル';
             if (window.confirm(`"${fileName}" を削除してもよろしいですか？`)) {
                 removeStoredFile(selectedFileId);
-                setSelectedFileId('');
-                setSelectedMenu('');
-                setMenuOptionDisabled(false);
+                resetAppState();
             }
         }
     };
 
     const handleFileButtonClick = () => {
         document.getElementById('file-input')?.click();
+    };
+
+    const handleToggleAnswer = (question: Question, isShown: boolean) => {
+        updateAnswerState(question, isShown);
     };
 
     return (
@@ -281,6 +321,17 @@ const KanjiDrill = () => {
                         <option value="create-new">新規作成...</option>
                         <option value="new-file">新しく読み込み...</option>
                         <option value="difficult-only">苦手な問題のみ表示</option>
+
+                        {difficultSlots.length > 0 && (
+                            <optgroup label="苦手スロット">
+                                {difficultSlots.map((slot) => (
+                                    <option key={slot.id} value={slot.id}>
+                                        {slot.name} ({slot.questions.length})
+                                    </option>
+                                ))}
+                            </optgroup>
+                        )}
+
                         {storedFiles.length > 0 && (
                             <optgroup label="保存済みファイル">
                                 {storedFiles.map((file: StoredCSVFile) => (
@@ -300,7 +351,55 @@ const KanjiDrill = () => {
                             <HiPlus className="w-5 h-5" />
                         </button>
                     )}
+
+                    {/* 苦手保存先セレクタ (ファイル表示モードのとき) */}
+                    {selectedFileId && !showDifficultOnly && (
+                        <div className="flex items-center gap-2 ml-4">
+                            <span className="text-sm text-gray-600">苦手保存先:</span>
+                            <SlotSelector
+                                slots={difficultSlots}
+                                currentSlotId={currentSlotId}
+                                onChange={setCurrentSlot}
+                                compact={true}
+                            />
+                        </div>
+                    )}
                 </div>
+
+                {/* 苦手問題閲覧モードの時のスロット管理UI */}
+                {showDifficultOnly && (
+                    <div className="mb-4 flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">現在のスロット:</span>
+                            <SlotSelector
+                                slots={difficultSlots}
+                                currentSlotId={currentSlotId}
+                                onChange={(slotId) => {
+                                    setCurrentSlot(slotId);
+                                    updateCurrentSlot(slotId);
+                                    updateDifficultOnlyState(true, slotId);
+                                }}
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    const currentSlot = difficultSlots.find(s => s.id === currentSlotId);
+                                    if (currentSlot && currentSlot.questions.length > 0) {
+                                        if (window.confirm(`「${currentSlot.name}」の苦手問題をすべて削除してもよろしいですか？`)) {
+                                            clearSlot(currentSlotId);
+                                        }
+                                    }
+                                }}
+                                disabled={difficultQuestions.length === 0}
+                                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                このスロットをクリア
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* ボタン行 */}
                 {(selectedFileId || showDifficultOnly) && (
@@ -356,6 +455,8 @@ const KanjiDrill = () => {
                     isNewFile={isNewFile}
                 />
 
+                {/* 苦手マークダイアログは不要なため削除 */}
+
                 <input
                     id="file-input"
                     type="file"
@@ -377,15 +478,17 @@ const KanjiDrill = () => {
 
             <div className="flex flex-col gap-12">
                 {rows.map((row, rowIndex) => (
-                    <div key={`${selectedFileId}-${rowIndex}`} className="flex justify-end">
+                    <div key={`${selectedFileId}-${rowIndex}-${resetKey}`} className="flex justify-end">
                         <div className="flex flex-row-reverse items-start">
                             {row.map((question) => (
                                 <QuestionDisplay
-                                    key={`${question.text}-${question.question}-${resetKey}`}
+                                    key={`${generateQuestionId(question)}-${resetKey}`}
                                     question={question}
                                     isDifficult={isDifficult(question)}
-                                    onMarkDifficult={addDifficultQuestion}
+                                    onMarkDifficult={selectedFileId ? handleMarkDifficultDirectly : addDifficultQuestion}
                                     onMarkMastered={removeDifficultQuestion}
+                                    isAnswerShown={isAnswerShown(question)}
+                                    onToggleAnswer={handleToggleAnswer}
                                 />
                             ))}
                         </div>
