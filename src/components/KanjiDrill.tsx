@@ -334,57 +334,60 @@ const KanjiDrill = () => {
     return (
         <div className="p-2">
             <div className="mb-4 flex flex-col gap-2">
-                {/* メニュー行 */}
-                <div className="flex items-center gap-2">
-                    <select
-                        onChange={handleMenuSelect}
-                        className="block w-54 p-2 border border-gray-300 rounded"
-                        value={selectedMenu}
-                    >
-                        <option value="" disabled={menuOptionDisabled}>メニュー</option>
-                        <option value="create-new">新規作成...</option>
-                        <option value="new-file">新しく読み込み...</option>
-                        <option value="difficult-only">苦手な問題のみ表示</option>
 
-                        {difficultSlots.length > 0 && (
-                            <optgroup label="苦手スロット">
-                                {difficultSlots.map((slot) => (
-                                    <option key={slot.id} value={slot.id}>
-                                        {slot.name} ({slot.questions.length})
-                                    </option>
-                                ))}
-                            </optgroup>
-                        )}
-
-                        {storedFiles.length > 0 && (
-                            <optgroup label="保存済みファイル">
-                                {storedFiles.map((file: StoredCSVFile) => (
-                                    <option key={file.id} value={file.id}>
-                                        {file.name}
-                                    </option>
-                                ))}
-                            </optgroup>
-                        )}
-                    </select>
-
-                    {showFileButton && isMobile && (
-                        <button
-                            onClick={handleFileButtonClick}
-                            className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                <div className="flex flex-col gap-2">
+                    {/* メニュー行 */}
+                    <div className="flex items-center gap-2">
+                        <select
+                            onChange={handleMenuSelect}
+                            className="block w-54 p-2 border border-gray-300 rounded"
+                            value={selectedMenu}
                         >
-                            <HiPlus className="w-5 h-5" />
-                        </button>
-                    )}
+                            <option value="" disabled={menuOptionDisabled}>メニュー</option>
+                            <option value="create-new">新規作成...</option>
+                            <option value="new-file">新しく読み込み...</option>
+                            <option value="difficult-only">苦手な問題のみ表示</option>
+
+                            {difficultSlots.length > 0 && (
+                                <optgroup label="苦手スロット">
+                                    {difficultSlots.map((slot) => (
+                                        <option key={slot.id} value={slot.id}>
+                                            {slot.name} ({slot.questions.length})
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+
+                            {storedFiles.length > 0 && (
+                                <optgroup label="保存済みファイル">
+                                    {storedFiles.map((file: StoredCSVFile) => (
+                                        <option key={file.id} value={file.id}>
+                                            {file.name}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
+
+                        {showFileButton && isMobile && (
+                            <button
+                                onClick={handleFileButtonClick}
+                                className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 active:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+                            >
+                                <HiPlus className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
 
                     {/* 苦手保存先セレクタ (ファイル表示モードのとき) */}
                     {selectedFileId && !showDifficultOnly && (
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-600">苦手保存先:</span>
                             <SlotSelector
                                 slots={difficultSlots}
                                 currentSlotId={currentSlotId}
                                 onChange={setCurrentSlot}
-                                compact={true}
+                                compact={false}
                             />
                         </div>
                     )}
@@ -394,7 +397,6 @@ const KanjiDrill = () => {
                 {showDifficultOnly && (
                     <div className="mb-4 flex flex-wrap items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">現在のスロット:</span>
                             <SlotSelector
                                 slots={difficultSlots}
                                 currentSlotId={currentSlotId}
@@ -419,7 +421,7 @@ const KanjiDrill = () => {
                                 disabled={difficultQuestions.length === 0}
                                 className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                このスロットをクリア
+                                クリア
                             </button>
                         </div>
                     </div>
@@ -478,8 +480,6 @@ const KanjiDrill = () => {
                     }}
                     isNewFile={isNewFile}
                 />
-
-                {/* 苦手マークダイアログは不要なため削除 */}
 
                 <input
                     id="file-input"
