@@ -65,11 +65,18 @@ const KanjiDrill = () => {
         const stored = localStorage.getItem(SHUFFLE_STATE_KEY);
         return stored ? JSON.parse(stored) : {};
     });
-    const [difficultShuffleState, setDifficultShuffleState] = useState<number[]>(() => {
+    const [difficultShuffleState, setDifficultShuffleState] = useState<string[]>(() => {
         const stored = localStorage.getItem(DIFFICULT_SHUFFLE_STATE_KEY);
-        return stored ? JSON.parse(stored) : [];
+        if (stored) {
+            const parsedState = JSON.parse(stored);
+            if (parsedState.length > 0 && typeof parsedState[0] === 'number') {
+                localStorage.removeItem(DIFFICULT_SHUFFLE_STATE_KEY);
+                return [];
+            }
+            return parsedState;
+        }
+        return [];
     });
-
     const handleMarkDifficultDirectly = (question: Question) => {
         addDifficultQuestion(question, currentSlotId);
     };
@@ -118,11 +125,24 @@ const KanjiDrill = () => {
 
     useEffect(() => {
         if (difficultQuestions.length > 0) {
-            if (difficultShuffleState.length === difficultQuestions.length) {
-                const orderedQuestions = difficultShuffleState.map(index => difficultQuestions[index]);
-                setShuffledDifficultQuestions(orderedQuestions);
+            if (difficultShuffleState.length > 0) {
+                const questionMap = new Map(difficultQuestions.map(q => [generateQuestionId(q), q]));
+
+                const validIds = difficultShuffleState.filter(id => questionMap.has(id));
+
+                if (validIds.length === 0) {
+                    setShuffledDifficultQuestions([...difficultQuestions]);
+                    return;
+                }
+
+                const orderedQuestions = validIds.map(id => questionMap.get(id)!);
+
+                const shuffledIds = new Set(validIds);
+                const newQuestions = difficultQuestions.filter(q => !shuffledIds.has(generateQuestionId(q)));
+
+                setShuffledDifficultQuestions([...orderedQuestions, ...newQuestions]);
             } else {
-                setShuffledDifficultQuestions(difficultQuestions);
+                setShuffledDifficultQuestions([...difficultQuestions]);
             }
         } else {
             setShuffledDifficultQuestions([]);
@@ -135,21 +155,25 @@ const KanjiDrill = () => {
         localStorage.setItem(SHUFFLE_STATE_KEY, JSON.stringify(newStates));
     };
 
-    const saveDifficultShuffleState = (indices: number[]) => {
-        setDifficultShuffleState(indices);
-        localStorage.setItem(DIFFICULT_SHUFFLE_STATE_KEY, JSON.stringify(indices));
+    const saveDifficultShuffleState = (ids: string[]) => {
+        setDifficultShuffleState(ids);
+        localStorage.setItem(DIFFICULT_SHUFFLE_STATE_KEY, JSON.stringify(ids));
     };
 
     const handleShuffle = () => {
         if (showDifficultOnly) {
-            const indices = Array.from({ length: difficultQuestions.length }, (_, i) => i);
-            for (let i = indices.length - 1; i > 0; i--) {
+            const questionIds = difficultQuestions.map(q => generateQuestionId(q));
+
+            for (let i = questionIds.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [indices[i], indices[j]] = [indices[j], indices[i]];
+                [questionIds[i], questionIds[j]] = [questionIds[j], questionIds[i]];
             }
-            const shuffled = indices.map(i => difficultQuestions[i]);
+
+            const questionMap = new Map(difficultQuestions.map(q => [generateQuestionId(q), q]));
+            const shuffled = questionIds.map(id => questionMap.get(id)!);
+
             setShuffledDifficultQuestions(shuffled);
-            saveDifficultShuffleState(indices);
+            saveDifficultShuffleState(questionIds);
         } else if (selectedFileId) {
             const indices = Array.from({ length: questions.length }, (_, i) => i);
             for (let i = indices.length - 1; i > 0; i--) {
